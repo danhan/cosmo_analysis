@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NavigableMap;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Result;
@@ -13,171 +14,128 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
 
-public class CosmoQuerySchema1 extends CosmoQueryAbstraction{
-	
-	public CosmoQuerySchema1(int schema){
+public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
+
+	public CosmoQuerySchema1(int schema) {
 		super(1);
 	}
 
-	// Q1 : Return all particles whose property X is above a given threshold at step S1
+	// Q1 : Return all particles whose property X is above a given threshold at
+	// step S1
 	@Override
-	public void propertyFilter(String family,String proper_name, String compareOp,
-								String threshold, long snapshot,
-									String[] result_families, String[] result_columns) {	
+	public void propertyFilter(String family, String proper_name,
+			String compareOp, String threshold, long snapshot,
+			String[] result_families, String[] result_columns) {
 		ResultScanner rScanner = null;
-		System.out.println("for snapshot: "+snapshot);		
-		try{
+		System.out.println("for snapshot: " + snapshot);
+		try {
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-			Filter columnFilter = hbaseUtil.getColumnFilter(family, proper_name, compareOp, threshold);									
+			Filter rowFilter = hbaseUtil.getColumnFilter(family,
+					proper_name, compareOp, threshold);
 			List<Long> timestamps = new LinkedList<Long>();
 			timestamps.add(snapshot);
 			Filter timeStampFilter = hbaseUtil.getTimeStampFilter(timestamps);
-			fList.addFilter(columnFilter);	
+			fList.addFilter(rowFilter);
 			fList.addFilter(timeStampFilter);
-				
-			
+
 			long s_time = System.currentTimeMillis();
 
-			rScanner = this.hbaseUtil.getResultSet(fList,result_families,result_columns);
+			rScanner = this.hbaseUtil.getResultSet(fList, result_families,result_columns);
 			
-			HashMap<String,HashMap<String,String>> key_values = new HashMap<String,HashMap<String,String>>();
-			int count = 0;
-			for(Result result: rScanner){
-				count++;
-				HashMap<String,String> oneRow = new HashMap<String,String>();
-				String key = Bytes.toString(result.getRow());	
-				
-				if (null != result_columns){
-					for(int i=0;i<result_columns.length;i++){
-						byte[] value = result.getValue(result_families[i].getBytes(), result_columns[i].getBytes());
-						
-						oneRow.put(result_columns[i], Bytes.toString(value));						
-					}
-					key_values.put(key, oneRow);
-				}else{
-					for(KeyValue kv:result.raw()){																		
-						oneRow.put(Bytes.toString(kv.getQualifier()), Bytes.toString(kv.getValue()));
-					}
-					key_values.put(key, oneRow);
-				}
-				if(count<5){					
-					for(String k:key_values.keySet()){
-						System.out.println("key=>"+key);
-						HashMap<String,String> kv = key_values.get(k);
-						for(String q: kv.keySet()){
-							System.out.print(q+"=>"+kv.get(q)+"; ");
-						}
-					}
-					System.out.println();
-					
-				}
-					
-				// TODO store them into files
-				key_values.clear();
-				
-			}
+			HashMap<String, HashMap<String, String>> key_values = displayScanResult(rScanner,result_families,result_columns);
 			
 			long e_time = System.currentTimeMillis();
 			long exe_time = e_time - s_time;
-			//TODO store the time into database
-			System.out.print("exe_time"+"\t"+"num_of_row"+"\n");	
-			System.out.println(exe_time+"\t"+count);			
-		}catch(Exception e){
+			
+			// TODO store the time into database
+			System.out.print("exe_time" + "\t" + "num_of_row" + "\n");
+			System.out.println(exe_time + "\t" + key_values.size());			
+						
+		} catch (Exception e) {
 			e.printStackTrace();
-		}finally{
-			if(rScanner != null) 
+		} finally {
+			if (rScanner != null)
 				rScanner.close();
 		}
-		
-		
+
 	}
 
 	@Override
 	public void findNeigbour(Point p, int type, int distance) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	// Q4: Return gas particles destroyed between step S1 and S2
 	@Override
-	public void getUnique(int type, long s1,long s2,
-							String[] result_families, String[] result_columns) {
+	public void getUnique(int type, long s1, long s2) {
 		ResultScanner rScanner = null;
-		
-		try{
-			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);								
-			Filter rowFilter = hbaseUtil.getRowFilter("=", "(-"+type+"-)");
+
+		try {
+			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
+			Filter rowFilter = hbaseUtil.getRowFilter("=", "(-" + type + "-)");
+			Filter columnFilter = hbaseUtil.getFirstColumnFilter();
 			fList.addFilter(rowFilter);
+			fList.addFilter(columnFilter);
 			List<Long> timestamps = new LinkedList<Long>();
 			timestamps.add(s1);
 			timestamps.add(s2);
 			Filter timeStampFilter = hbaseUtil.getTimeStampFilter(timestamps);
-			fList.addFilter(timeStampFilter);	
-			
-					
+			fList.addFilter(timeStampFilter);
+
 			long s_time = System.currentTimeMillis();
 
-			rScanner = this.hbaseUtil.getResultSet(fList,null,null);
-			
-			HashMap<String,HashMap<String,String>> key_values = new HashMap<String,HashMap<String,String>>();
+			rScanner = this.hbaseUtil.getResultSet(fList, null, null);
+
+			List<String> particles = new LinkedList<String>();
 			int count = 0;
-			for(Result result: rScanner){
+			for (Result result : rScanner) {
 				count++;
-				HashMap<String,String> oneRow = new HashMap<String,String>();
-				String key = Bytes.toString(result.getRow());	
-				
-				for(KeyValue cell: result.raw()){
-					long timestamp = cell.getTimestamp();
-					//result.
-				}
-				if (null != result_columns){
-					for(int i=0;i<result_columns.length;i++){
-						byte[] value = result.getValue(result_families[i].getBytes(), result_columns[i].getBytes());
-						
-						oneRow.put(result_columns[i], Bytes.toString(value));						
+				String key = Bytes.toString(result.getRow());
+				boolean s1Unique = false;
+				NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> resultMap = result
+						.getMap();
+				if (resultMap != null) {
+					for (byte[] family : resultMap.keySet()) {						
+						NavigableMap<byte[], NavigableMap<Long, byte[]>> columns = resultMap.get(family);
+						for (byte[] column : columns.keySet()) {
+							NavigableMap<Long, byte[]> values = columns.get(column);
+							if (values.keySet().contains(s1) && !values.keySet().contains(s2)) {
+								s1Unique = true;
+								break;
+							} else {
+								break;
+							}
+						}						
+						break;
 					}
-					key_values.put(key, oneRow);
-				}else{
-					for(KeyValue kv:result.raw()){																		
-						oneRow.put(Bytes.toString(kv.getQualifier()), Bytes.toString(kv.getValue()));
-					}
-					key_values.put(key, oneRow);
 				}
-				if(count<5){					
-					for(String k:key_values.keySet()){
-						System.out.println("key=>"+key);
-						HashMap<String,String> kv = key_values.get(k);
-						for(String q: kv.keySet()){
-							System.out.print(q+"=>"+kv.get(q)+"; ");
-						}
-					}
-					System.out.println();
-					
+				if (s1Unique) {
+					particles.add(key);
 				}
-					
-				// TODO store them into files
-				key_values.clear();
-				
 			}
-			
+			for (int i = 0; i < particles.size(); i++) {
+				// System.out.println(particles.get(i)+";");
+			}			
+
 			long e_time = System.currentTimeMillis();
 			long exe_time = e_time - s_time;
-			//TODO store the time into database
-			System.out.print("exe_time"+"\t"+"num_of_row"+"\n");	
-			System.out.println(exe_time+"\t"+count);			
-		}catch(Exception e){
+			// TODO store the time into database
+			System.out.print("exe_time" + "\t" + "result_row"+"\t"+"total_num_of_row" + "\n");
+			System.out.println(exe_time + "\t" + particles.size()+"\t"+count);
+		} catch (Exception e) {
 			e.printStackTrace();
-		}finally{
-			if(rScanner != null) 
+		} finally {
+			if (rScanner != null)
 				rScanner.close();
 		}
-		
+
 	}
 
 	@Override
 	public void intersectFilter(String proper_name, long s1, long s2) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

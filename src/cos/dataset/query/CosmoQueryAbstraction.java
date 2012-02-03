@@ -1,6 +1,12 @@
 package cos.dataset.query;
 
 import java.awt.Point;
+import java.util.HashMap;
+
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import cos.dataset.parser.CosmoConstant;
 
@@ -46,13 +52,66 @@ public abstract class CosmoQueryAbstraction {
 	
 	// Q4: Return gas particles destroyed between step S1 and S2
 	// s1-(intersect(s1,s2))
-	public abstract void getUnique(int type, long s1,long s2,
-								 	String[] result_families, String[] result_columns);
+	public abstract void getUnique(int type, long s1,long s2);
 		
 	// Q5: Return all particles whose property X changes from S1 to S2
 	// filter(intersect(s1,s2))
 	public abstract void intersectFilter(String proper_name, long s1,long s2);
 	
 	//Q3: Return all particles of type T within distance R of point P whose property X is above a threshold computed at timestep S1
+	
+	protected HashMap<String, HashMap<String, String>> displayScanResult(ResultScanner rScanner,
+								String[] result_families, String[] result_columns) throws Exception{
+		HashMap<String, HashMap<String, String>> key_values = null;
+		int count = 0;
+		if(rScanner == null)
+			throw new Exception("rScanner is null");
+		try{
+			key_values = new HashMap<String, HashMap<String, String>>();
+			for (Result result : rScanner) {
+				count++;
+				HashMap<String, String> oneRow = new HashMap<String, String>();
+				String key = Bytes.toString(result.getRow());
+
+				if (null != result_columns) {
+					for (int i = 0; i < result_columns.length; i++) {
+						byte[] value = result.getValue(
+								result_families[i].getBytes(),
+								result_columns[i].getBytes());
+
+						oneRow.put(result_columns[i], Bytes.toString(value));
+					}
+					key_values.put(key, oneRow);
+				} else {
+					for (KeyValue kv : result.raw()) {
+						oneRow.put(Bytes.toString(kv.getQualifier()),
+								Bytes.toString(kv.getValue()));
+					}
+					key_values.put(key, oneRow);
+				}
+				
+				// TODO store them into files
+				if (count < 5) {
+					for (String k : key_values.keySet()) {
+						System.out.println("key=>" + key);
+						HashMap<String, String> kv = key_values.get(k);
+						for (String q : kv.keySet()) {
+							System.out.print(q + "=>" + kv.get(q) + "; ");
+						}
+					}
+					System.out.println();
+				}				
+
+			}
+		
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+
+		return key_values;
+
+	}
+	
+	
 	
 }
