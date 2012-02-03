@@ -87,10 +87,10 @@ public class InsertData4Cosmo {
 						values[i-2] = metrics[i];						
 					}
 					if(schema==1){
-						String rowKey = "map-"+type+"-"+metrics[1];						
+						String rowKey = "00-"+type+"-"+metrics[1];						
 						hbase.insertRow(rowKey, families, qualifers, snapshot, values);
 					}else if(schema==2){
-						String rowKey = snapshot+"-map-"+type+"-"+metrics[1];						
+						String rowKey = snapshot+"-00-"+type+"-"+metrics[1];						
 						hbase.insertRow(rowKey, families, qualifers, -1, values);
 					}
 					line = in.readLine();
