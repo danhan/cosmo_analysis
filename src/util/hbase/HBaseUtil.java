@@ -84,14 +84,21 @@ public class HBaseUtil {
 		return new HTable(conf, tableName);
 	}
 	
-	public void getTableHandler(String tableName){
+	public HTable getTableHandler(String tableName){
 		try{
 			table = new HTable(conf, tableName);
 			table.setAutoFlush(true);	
+			
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		return table;
 	}
+	
+	public HTable getHTable(){
+		return this.table;
+	}
+	
 	
 	public void insertRow(String rowKey,String[] families, String[] qualifiers, long ts,String[] values) throws Exception{
 		if(table == null)
@@ -292,6 +299,65 @@ public class HBaseUtil {
 		
 	}
 	
+	public Scan generateScan(FilterList filterList,String[] families,String[] columns) throws Exception{
+		if(table == null)
+			throw new Exception("No table handler");
+		if(cacheSize < 0)
+			throw new Exception("should set cache size before scanning");
+		
+		Scan scan = null;		
+		
+		try{
+			scan = new Scan();
+			scan.setMaxVersions(CosmoConstant.MAX_VERION);
+			//scan.setCaching(this.cacheSize);
+			//scan.setCacheBlocks(blockCached);
+			scan.setFilter(filterList);	
+				
+			if(columns != null){
+				for(int i=0;i<columns.length;i++){
+					scan.addColumn(families[i].getBytes(),columns[i].getBytes());	
+				}	
+			}			
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return scan;		
+	}	
+	
+	public Scan generateScan(byte[][] rowRange,FilterList filterList,String[] family,String[] columns) throws Exception{
+		if(table == null)
+			throw new Exception("No table handler");
+		if(cacheSize < 0)
+			throw new Exception("should set cache size before scanning");
+		
+		Scan scan = null;		
+		
+		try{
+			scan = new Scan();
+			scan.setMaxVersions(CosmoConstant.MAX_VERION);
+			//scan.setCaching(this.cacheSize);
+			//scan.setCacheBlocks(blockCached);
+			scan.setFilter(filterList);	
+			scan.setStartRow(rowRange[0]);
+			scan.setStopRow(rowRange[1]);
+				
+			if(columns != null){
+				for(int i=0;i<columns.length;i++){
+					scan.addColumn(family[i].getBytes(),columns[i].getBytes());	
+				}	
+			}			
+			System.out.println("after get the result scanner...");
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return scan;
+		
+	}	
 
 	public ResultScanner getResultSet(byte[][] rowRange,FilterList filterList,String[] family,String[] columns) throws Exception{
 		if(table == null)
@@ -315,8 +381,7 @@ public class HBaseUtil {
 				for(int i=0;i<columns.length;i++){
 					scan.addColumn(family[i].getBytes(),columns[i].getBytes());	
 				}	
-			}
-			
+			}			
 			
 			//TODO set filter for scan
 			rscanner = this.table.getScanner(scan);

@@ -12,9 +12,9 @@ public class CosmoQueryClient {
 			String proper_name = "pos_x";
 			String compareOp = ">";
 			String threshold = "0.000006";
-			long snapshot = 60;
-			//String[] result_columns = new String[]{"pos_x"};
-			//String[] result_families = new String[]{"pp"};
+			long snapshot = 24;
+			String[] result_columns = new String[]{"pos_x"};
+			String[] result_families = new String[]{"pp"};
 					
 			//schema1.propertyFilter(family,proper_name,compareOp,threshold,snapshot,result_families,result_columns);
 			//schema2.propertyFilter(family,proper_name,compareOp,threshold,snapshot,result_families,result_columns);
@@ -22,7 +22,10 @@ public class CosmoQueryClient {
 			//schema1.getUnique(2, 60, 24);
 			//schema1.getUnique(2, 60, 24, new String[]{"pp"},new String[]{"pos_x"});
 			//schema1.getUnique(2, 24, 60);
-			schema2.getUnique(2, 60, 24);
+			//schema2.getUnique(2, 60, 24);
 			//schema2.getUnique(2, 24, 60);
+			/**************************************************/
+			//schema1.propertyFilterCoprocs(family, proper_name, compareOp, threshold, snapshot, null, null);
+			schema1.getUniqueCoprocs(2, 10,24);
 		}
 }

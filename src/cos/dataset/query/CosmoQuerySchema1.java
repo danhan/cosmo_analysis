@@ -1,18 +1,25 @@
 package cos.dataset.query;
 
 import java.awt.Point;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 
-import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
+
+import cos.dataset.query.coprocessor.CosmoProtocol;
 
 public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 
@@ -40,8 +47,7 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 
 			long s_time = System.currentTimeMillis();
 
-			rScanner = this.hbaseUtil.getResultSet(fList, result_families,result_columns);
-			
+			rScanner = this.hbaseUtil.getResultSet(fList, result_families,result_columns);			
 			HashMap<String, HashMap<String, String>> key_values = displayScanResult(rScanner,result_families,result_columns);
 			
 			long e_time = System.currentTimeMillis();
@@ -137,5 +143,128 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 		// TODO Auto-generated method stub
 
 	}
+	
+/**************************************************************
+ * 	*****************Coprocessor Client************************
+ **************************************************************/
+	
+	public  Map<String, String> propertyFilterCoprocs(String family, String proper_name,
+			String compareOp, String threshold, long snapshot,
+			final String[] result_families, final String[] result_columns){
+		
+		try{
+			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
+			Filter rowFilter = hbaseUtil.getColumnFilter(family,
+					proper_name, compareOp, threshold);
+			List<Long> timestamps = new LinkedList<Long>();
+			timestamps.add(snapshot);
+			Filter timeStampFilter = hbaseUtil.getTimeStampFilter(timestamps);
+			fList.addFilter(rowFilter);
+			fList.addFilter(timeStampFilter);
+			
+		    	    
+		    // Call back class definition
+		    class CosmoCallBack implements Batch.Callback<Map<String, String>> {
+		      Map<String, String> res = new HashMap<String, String>();
+
+		      @Override
+		      public void update(byte[] region, byte[] row, Map<String, String> result) {
+		        res = result;
+		      }
+		    }
+		    
+		    CosmoCallBack callBack = new CosmoCallBack();
+		    long s_time = System.currentTimeMillis();
+		    
+		    final Scan scan = hbaseUtil.generateScan(fList, result_families, result_columns);
+		    System.out.println("start to send the query.....");
+		    
+		    hbaseUtil.getHTable().coprocessorExec(CosmoProtocol.class, null, null,
+		    		new Batch.Call<CosmoProtocol, Map<String, String>>() {
+		      public Map<String, String> call(CosmoProtocol instance)
+		          throws IOException {  
+		    	  System.out.println("in the call function");
+		        return instance.propertyFilter(result_families, result_columns, scan);		     
+		      };
+		    }, callBack);	
+		    
+		    long e_time = System.currentTimeMillis();
+		    
+			long exe_time = e_time - s_time;
+			// TODO store the time into database
+			System.out.println("exe_time" + "\t" + "result_row");
+			System.out.println(exe_time + "\t" + callBack.res.size());
+		    
+		    return callBack.res;
+		    
+		}catch(Exception e){
+			e.printStackTrace();
+		}catch(Throwable ee){
+			ee.printStackTrace();
+		}
+		
+		return null;
+	    		
+	}
+
+	/*
+	 * If want to get all versions, cannot specify the columns and families
+	 */
+	public Collection<String> getUniqueCoprocs(final int type, final long s1, final long s2) {
+		
+		try{		    	    
+		    // Call back class definition
+		    class CosmoCallBack implements Batch.Callback<Collection<String>> {
+		      Collection<String> res = new ArrayList<String>();
+
+		      @Override
+		      public void update(byte[] region, byte[] row, Collection<String> result) {
+		        res = result;
+		      }
+		    }		    
+		    CosmoCallBack callBack = new CosmoCallBack();
+		    
+
+			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
+			Filter rowFilter = hbaseUtil.getRowFilter("=", "(-" + type + "-)");
+			
+			fList.addFilter(rowFilter);
+			List<Long> timestamps = new LinkedList<Long>();
+			timestamps.add(s1);
+			timestamps.add(s2);
+			Filter timeStampFilter = hbaseUtil.getTimeStampFilter(timestamps);
+			fList.addFilter(timeStampFilter);
+
+			final Scan scan = this.hbaseUtil.generateScan(fList, null,null);		    
+	    
+		    long s_time = System.currentTimeMillis();		    
+		    hbaseUtil.getHTable().coprocessorExec(CosmoProtocol.class, null,null,
+		    		new Batch.Call<CosmoProtocol, Collection<String>>() {
+		      public Collection<String> call(CosmoProtocol instance)
+		          throws IOException {
+		        return instance.getUniqueCoprocs4S1(type,s1,s2,scan);
+		      };
+		    }, callBack);	
+		    
+		    long e_time = System.currentTimeMillis();
+		    
+			long exe_time = e_time - s_time;
+			// TODO store the time into database
+			System.out.println("exe_time" + "\t" + "result_row");
+			System.out.println(exe_time + "\t" + callBack.res.size());
+		    
+		    return callBack.res;
+		    
+		}catch(Exception e){
+			e.printStackTrace();
+		}catch(Throwable ee){
+			ee.printStackTrace();
+		}
+		
+		return null;			
+		
+		
+	}	
+	
 
 }

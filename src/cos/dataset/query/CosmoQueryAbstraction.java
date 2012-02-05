@@ -1,6 +1,7 @@
 package cos.dataset.query;
 
 import java.awt.Point;
+import java.util.Collection;
 import java.util.HashMap;
 
 import org.apache.hadoop.hbase.KeyValue;
@@ -32,7 +33,7 @@ public abstract class CosmoQueryAbstraction {
 			}else if(schema==3){
 				
 			}
-			hbaseUtil.getTableHandler(tableName);
+			hbaseUtil.getTableHandler("test");//(tableName);
 			hbaseUtil.setScanConfig(cacheSize, false);
 			
 		}catch(Exception e){				
