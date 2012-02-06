@@ -11,7 +11,7 @@ import util.DataTransformation;
 public class CosmologyParser {
 	
 
-	public static void main(String args[]){
+	public static void main(String args[]){		
 				
 		String fileDir = args[0];
 		

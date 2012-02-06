@@ -140,7 +140,15 @@ public class XOctBox {
     	return msg;    				 
     }
     
-    
+    public String toSprintf(){
+    	String msg = this.left+"\t"+
+    				 this.right+"\t"+
+    				 this.bottom+"\t"+
+    				 this.top+"\t"+
+    				 this.front+"\t"+
+    				 this.back;
+    	return msg;		 
+    }
     
 
 }

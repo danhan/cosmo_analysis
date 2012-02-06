@@ -1,6 +1,6 @@
 package util;
 
-import java.nio.ByteBuffer;
+import org.apache.hadoop.hbase.util.Bytes;
 
 
 // from little endian to ASCII
@@ -21,7 +21,7 @@ public class DataTransformation {
 		dest[6] = source[1];
 		dest[7] = source[0];
 		
-		return ByteBuffer.wrap(dest).getLong();		
+		return Bytes.toLong(dest);		
 		
 	}
 	
@@ -35,7 +35,7 @@ public class DataTransformation {
 		dest[2] = source[1];
 		dest[3] = source[0];		
 		
-		return ByteBuffer.wrap(dest).getFloat();				
+		return Bytes.toFloat(dest);				
 	}		
 	
 }

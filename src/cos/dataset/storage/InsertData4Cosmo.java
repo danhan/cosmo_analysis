@@ -7,13 +7,15 @@ import java.io.IOException;
 
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import util.hbase.HBaseUtil;
+import util.octree.XOcTree;
 import cos.dataset.parser.CosmoConstant;
+import cos.dataset.parser.CosmoSpaceIndexing;
 
 public class InsertData4Cosmo {
 
-
 	HBaseUtil hbase = null;
-
+	XOcTree tree = null;
+	
 	/**
 	 * @throws IOException
 	 */
@@ -23,8 +25,7 @@ public class InsertData4Cosmo {
 			hbase.getTableHandler(CosmoConstant.TABLE_NAME);	
 		}else if(schema == 2){
 			hbase.getTableHandler(CosmoConstant.TABLE_NAME_2);
-		}
-		
+		}				
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -34,10 +35,25 @@ public class InsertData4Cosmo {
 		int schema = Integer.parseInt(args[0]);
 		InsertData4Cosmo inserter = new InsertData4Cosmo(schema);		
 		String fileDir = args[1];
+		
+		//create space indexing tree
+		try{
+			CosmoSpaceIndexing indexing = new CosmoSpaceIndexing(-1, 1, -1, 1,-1, 1, 1000);
+			indexing.execute(fileDir, fileDir+"/"+CosmoConstant.SPACE_INDEXING_FILE_NAME);
+			inserter.setIndexingTree(indexing.getTree());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		//
 		inserter.upload(schema,fileDir);
 		
 	}
-
+	
+	public void setIndexingTree(XOcTree tree){
+		this.tree = tree;
+	}
+	
 	private void upload(int schema,String fileDir) {
 
 		File dir = new File(fileDir);
@@ -86,11 +102,17 @@ public class InsertData4Cosmo {
 					for(int i=2;i<metrics.length;i++){
 						values[i-2] = metrics[i];						
 					}
+					// TODO get index from the tree
+					float x = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_X]);
+					float y = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_Y]);
+					float z = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_Z]);
+					String index =this.tree.lookup(x, y, z).getIndex();					
+										
 					if(schema==1){
-						String rowKey = "00-"+type+"-"+metrics[1];						
+						String rowKey = index+"-"+type+"-"+metrics[CosmoConstant.INDEX_PID];						
 						hbase.insertRow(rowKey, families, qualifers, snapshot, values);
 					}else if(schema==2){
-						String rowKey = snapshot+"-00-"+type+"-"+metrics[1];						
+						String rowKey = snapshot+"-"+index+"-"+type+"-"+metrics[CosmoConstant.INDEX_PID];						
 						hbase.insertRow(rowKey, families, qualifers, -1, values);
 					}
 					line = in.readLine();

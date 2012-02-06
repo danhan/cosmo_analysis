@@ -39,4 +39,14 @@ public class CosmoConstant {
 	
 	public static final int MAX_VERION = 1000; 
 	
+	public static final int INDEX_NO = 0;
+	public static final int INDEX_PID = 1;
+	public static final int INDEX_POS_X = 3;
+	public static final int INDEX_POS_Y = 4;
+	public static final int INDEX_POS_Z = 5;
+	
+	/********For indexing****************/
+	public static final String SPACE_INDEXING_FILE_NAME="./data/space-indexing";
+	
+	
 }
