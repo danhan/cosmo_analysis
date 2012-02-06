@@ -33,7 +33,7 @@ public abstract class CosmoQueryAbstraction {
 			}else if(schema==3){
 				
 			}
-			hbaseUtil.getTableHandler("test");//(tableName);
+			hbaseUtil.getTableHandler(tableName);
 			hbaseUtil.setScanConfig(cacheSize, false);
 			
 		}catch(Exception e){				

@@ -71,59 +71,62 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 
 		System.out.println("in the propertyFilter....");
 
-		//scan.setTimeRange(1, 50);
+		// scan.setTimeRange(1, 50);
 		scan.setMaxVersions(100);
-		//scan.addFamily("t".getBytes());
-		//scan.addColumn("t".getBytes(), "x".getBytes());
-		
+		// scan.addFamily("t".getBytes());
+		// scan.addColumn("t".getBytes(), "x".getBytes());
+
 		RegionScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment())
 				.getRegion().getScanner(scan);
 
 		List<KeyValue> res = new ArrayList<KeyValue>();
-		HashMap<String,List<KeyValue>> backup = new HashMap<String,List<KeyValue>>();
+		HashMap<String, List<KeyValue>> backup = new HashMap<String, List<KeyValue>>();
 		Collection<String> result = new ArrayList<String>();
 		boolean hasMoreResult = false;
 		System.out.println("*********Region information:"
 				+ scanner.getRegionInfo().getRegionId());
-		
-	//if(scanner.isFilterDone()){
-			try {
-				int num = 0;
-				do {
-					hasMoreResult = scanner.next(res);
-					List<KeyValue> pairs = new LinkedList<KeyValue>();
-					String key = "";
-					for (KeyValue kv : res) {
-						key = Bytes.toString(kv.getRow());
-						System.out.println("key is : "+key+";value=>"+Bytes.toString(kv.getValue()));
-						pairs.add(kv);						
-					}	
-					num++;
-					System.out.println("key: "+key+"; before adding size: "+backup.size()+";scanner num:"+num);
-					backup.put(key, pairs);
-					System.out.println("key: "+key+";after adding size: "+backup.size()+"");
-				} while (hasMoreResult);
 
-			} finally {
-				scanner.close();
-			}	
-			KVComparator compare = new KVComparator().getComparatorIgnoringTimestamps();
-			
-			for(String key: backup.keySet()){
-				List<KeyValue> kvList = backup.get(key);
-				for(int i=0;i<kvList.size();i++){
-					System.out.println("key=>"+key+";value=>"+kvList.toString());
-					if(i+1<kvList.size()){
-						System.out.println("compare===================");
-						System.out.println("result: "+compare.compare(kvList.get(i),kvList.get(i+1)));	
-					}
-					
+		try {
+			int num = 0;
+			do {
+				hasMoreResult = scanner.next(res);
+				List<KeyValue> pairs = new LinkedList<KeyValue>();
+				String key = "";
+				for (KeyValue kv : res) {
+					key = Bytes.toString(kv.getRow());
+					System.out.println("key is : " + key + ";value=>"
+							+ Bytes.toString(kv.getValue()));
+					pairs.add(kv);
 				}
-			}			
-		//}else{
-			//System.out.println("filter is not done.....");
-		//}
+				num++;
+				System.out.println("key: " + key + "; before adding size: "
+						+ backup.size() + ";scanner num:" + num);
+				backup.put(key, pairs);
+				System.out.println("key: " + key + ";after adding size: "
+						+ backup.size() + "");
+			} while (hasMoreResult);
 
+		} finally {
+			scanner.close();
+		}
+		KVComparator compare = new KVComparator()
+				.getComparatorIgnoringTimestamps();
+
+		for (String key : backup.keySet()) {
+			List<KeyValue> kvList = backup.get(key);
+			for (int i = 0; i < kvList.size(); i++) {
+				System.out.println("key=>" + key + ";value=>"
+						+ kvList.toString());
+				if (i + 1 < kvList.size()) {
+					System.out.println("compare===================");
+					System.out
+							.println("result: "
+									+ compare.compare(kvList.get(i),
+											kvList.get(i + 1)));
+				}
+
+			}
+		}
 
 		log.debug("the result......" + result.size());
 

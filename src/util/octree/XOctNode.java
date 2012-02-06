@@ -37,14 +37,14 @@ public class XOctNode {
 	}
 
 	public void setBranchIndex() {
-		this.branches[0].setIndex("000");
-		this.branches[1].setIndex("001");
-		this.branches[2].setIndex("010");
-		this.branches[3].setIndex("011");
-		this.branches[4].setIndex("100");
-		this.branches[5].setIndex("101");
-		this.branches[6].setIndex("110");
-		this.branches[7].setIndex("111");
+		this.branches[0].setIndex("0");
+		this.branches[1].setIndex("1");
+		this.branches[2].setIndex("2");
+		this.branches[3].setIndex("3");
+		this.branches[4].setIndex("4");
+		this.branches[5].setIndex("5");
+		this.branches[6].setIndex("6");
+		this.branches[7].setIndex("7");
 	}
 
 	// / <summary> Add a OctreeLeaf into the tree at a location.</summary>
@@ -135,7 +135,15 @@ public class XOctNode {
 		if (this.points == null)
 			this.points = new ArrayList<X3DPoint>();
 		point.setIndex(this.index);
-		this.points.add(point);
+		boolean existed = false;
+		for(int i=0;i<this.points.size();i++){
+			if(this.points.get(i).isEqual(point)){
+				existed = true;
+				break;
+			}
+		}
+		if(!existed)
+			this.points.add(point);
 	}
 
 

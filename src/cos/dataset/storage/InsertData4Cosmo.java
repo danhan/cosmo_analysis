@@ -65,6 +65,7 @@ public class InsertData4Cosmo {
 
 		long start = System.currentTimeMillis();
 
+		int num_of_particle = 0;
 		for (String fileName : fileNames) {
 			if (!fileName.endsWith(".out"))
 				continue;
@@ -115,6 +116,7 @@ public class InsertData4Cosmo {
 						String rowKey = snapshot+"-"+index+"-"+type+"-"+metrics[CosmoConstant.INDEX_PID];						
 						hbase.insertRow(rowKey, families, qualifers, -1, values);
 					}
+					num_of_particle++;
 					line = in.readLine();
 				}
 				
@@ -131,7 +133,7 @@ public class InsertData4Cosmo {
 
 		}
 
-		System.out.println("execution time: "+ (System.currentTimeMillis() - start));
+		System.out.println("execution time: "+ (System.currentTimeMillis() - start)+";total_number:"+num_of_particle);
 	}
 
 }

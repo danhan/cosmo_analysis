@@ -51,6 +51,16 @@ public class X3DPoint {
 		this.index = index;
 	}
 	
+	public boolean isEqual(X3DPoint point){
+		if(this.x == point.x &&
+		   this.y == point.y &&
+		   this.z == point.z &&
+           this.value == point.value				
+				)
+			return true;
+		return false;
+	}
+	
 	public String toString(){
 		String msg = "x=>"+this.x+";"+
 					";y=>"+this.y+

@@ -37,12 +37,11 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 		System.out.println("for snapshot: " + snapshot);
 		try {
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-			Filter rowFilter = hbaseUtil.getColumnFilter(family,
-					proper_name, compareOp, threshold);
+			Filter rowFilter = hbaseUtil.getColumnFilter(family,proper_name, compareOp, threshold);
 			List<Long> timestamps = new LinkedList<Long>();
 			timestamps.add(snapshot);
 			Filter timeStampFilter = hbaseUtil.getTimeStampFilter(timestamps);
-			fList.addFilter(rowFilter);
+			//fList.addFilter(rowFilter);
 			fList.addFilter(timeStampFilter);
 
 			long s_time = System.currentTimeMillis();
