@@ -15,6 +15,7 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import cos.dataset.parser.CosmoConstant;
 import cos.dataset.query.coprocessor.CosmoProtocol;
 
 /*
@@ -25,9 +26,16 @@ import cos.dataset.query.coprocessor.CosmoProtocol;
 public class CosmoQuerySchema2 extends CosmoQueryAbstraction{
 
 	
-	public CosmoQuerySchema2(int schema){
-		super(2);
+	public CosmoQuerySchema2() {
+		tableName = CosmoConstant.TABLE_NAME;
+		familyName = new String[]{CosmoConstant.FAMILY_NAME};
+		try{
+			this.setHBase();	
+		}catch(Exception e){
+			e.printStackTrace();
+		}		
 	}
+	
 	
 	@Override
 	public void propertyFilter(String family, String proper_name,

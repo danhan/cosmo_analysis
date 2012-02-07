@@ -3,16 +3,15 @@ package cos.dataset.query;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+
 
 import cos.dataset.parser.CosmoConstant;
 
-public class CosmoQueryClient {
+public class CosmoQueryTest {
 
 		public static void main(String args[]){
-			CosmoQuerySchema1 schema1 = new CosmoQuerySchema1(1);
-			CosmoQuerySchema2 schema2 = new CosmoQuerySchema2(2);
+			CosmoQuerySchema1 schema1 = new CosmoQuerySchema1();
+			CosmoQuerySchema2 schema2 = new CosmoQuerySchema2();
 			
 			String family = CosmoConstant.FAMILY_NAME;
 			String proper_name = "pos_x";

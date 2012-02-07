@@ -19,6 +19,7 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import cos.dataset.parser.CosmoConstant;
 import cos.dataset.query.coprocessor.CosmoProtocol;
 
 /*
@@ -28,8 +29,14 @@ import cos.dataset.query.coprocessor.CosmoProtocol;
  */
 public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 
-	public CosmoQuerySchema1(int schema) {
-		super(1);
+	public CosmoQuerySchema1() {
+		tableName = CosmoConstant.TABLE_NAME;
+		familyName = new String[]{CosmoConstant.FAMILY_NAME};
+		try{
+			this.setHBase();	
+		}catch(Exception e){
+			e.printStackTrace();
+		}		
 	}
 
 	// Q1 : Return all particles whose property X is above a given threshold at
