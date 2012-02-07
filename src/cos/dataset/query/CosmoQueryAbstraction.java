@@ -44,9 +44,9 @@ public abstract class CosmoQueryAbstraction {
 	}	
 	
 	//Q1 : Return all particles whose property X is above a given threshold at step S1
-	public abstract void propertyFilter(String family,String proper_name, String compareOp,
-										String threshold, long snapshot,
-											String[] result_families, String[] result_columns);
+	public abstract void propertyFilter(String family, String proper_name,
+			String compareOp, int type,String threshold, long snapshot,
+			String[] result_families, String[] result_columns);
 	
 	//Q2: Return all particles of type T within distance R of point P,go through all snapshots?
 	public abstract void findNeigbour(Point p, int type,int distance);

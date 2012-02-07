@@ -1,6 +1,7 @@
 package util.hbase;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -27,6 +28,9 @@ import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.TimestampsFilter;
+import org.apache.hadoop.hbase.util.Bytes;
+
+import util.Common;
 
 import cos.dataset.parser.CosmoConstant;
 
@@ -209,37 +213,68 @@ public class HBaseUtil {
 		return new RowFilter(operator,new RegexStringComparator(regex));
 	}
 	
-	public Filter getColumnFilter(String family,String qualifer, String compareOp,String threshold) throws Exception{
-		
-		CompareOp operator = null;
-		if (qualifer == null || family == null)
+	public HashMap<String, HashMap<String, String>> columnFilter(ResultScanner rScanner,
+					String family,String column,String compareOp,int type,String threshold,
+					String[] result_families, String[] result_columns)throws Exception{
+				
+		if (column == null || family == null)
 			throw new Exception("the family:qulifer operation is null");
 		if(compareOp == null)
 			throw new Exception("The compareOp is null");
 		if(threshold == null)
 			throw new Exception("The threshold is null");
 		
+		HashMap<String, HashMap<String, String>> key_values = null;		
 		try{
-			if(compareOp.equals("=")){
-				operator = CompareFilter.CompareOp.EQUAL;
-			}else if(compareOp.equals(">")){
-				operator = CompareFilter.CompareOp.GREATER;
-			}else if(compareOp.equals("<")){
-				operator = CompareFilter.CompareOp.LESS;
-			}else if(compareOp.equals(">=")){
-				operator = CompareFilter.CompareOp.GREATER_OR_EQUAL;
-			}else if(compareOp.equals("<=")){
-				operator = CompareFilter.CompareOp.LESS_OR_EQUAL;
-			}else{
-				throw new Exception("The compare operation: "+compareOp+" is invalid");
+			int count = 0;
+			key_values = new HashMap<String, HashMap<String, String>>();
+			for (Result result : rScanner) {
+				count++;
+				HashMap<String, String> oneRow = new HashMap<String, String>();
+				String key = Bytes.toString(result.getRow());
+				String source = Bytes.toString(result.getValue(Bytes.toBytes(family), Bytes.toBytes(column)));
+				if(Common.doCompare(type,source,compareOp,threshold)){
+					if (null != result_columns) {
+						for (int i = 0; i < result_columns.length; i++) {
+							byte[] value = result.getValue(
+									result_families[i].getBytes(),
+									result_columns[i].getBytes());
+
+							oneRow.put(result_columns[i], Bytes.toString(value));
+						}
+						key_values.put(key, oneRow);
+					} else {
+						for (KeyValue kv : result.raw()) {
+							oneRow.put(Bytes.toString(kv.getQualifier()),
+									Bytes.toString(kv.getValue()));
+						}
+						key_values.put(key, oneRow);
+					}					
+				}				
+				// TODO store them into files
+				if (count < 5) {
+					for (String k : key_values.keySet()) {
+						System.out.println("key=>" + key);
+						HashMap<String, String> kv = key_values.get(k);
+						for (String q : kv.keySet()) {
+							System.out.print(q + "=>" + kv.get(q) + "; ");
+						}
+					}
+					System.out.println();
+				}				
+
 			}
+		
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		
-		return new SingleColumnValueFilter(family.getBytes(),qualifer.getBytes(),operator, threshold.getBytes());	
-				
+
+		return key_values;				
 	}
+	
+
+	
+	
 	// Note: there is a jar file from google: google-collections-0.8.jar need to be imported.
 	public Filter getTimeStampFilter(List<Long> timestamps) throws Exception{
 				
@@ -263,7 +298,6 @@ public class HBaseUtil {
 	public Filter getKeyOnlyFilter() throws Exception {
 		return new KeyOnlyFilter();
 	}
-	
 	
 	
 	public ResultScanner getResultSet(FilterList filterList,String[] family,String[] columns) throws Exception{

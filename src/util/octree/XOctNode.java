@@ -51,13 +51,13 @@ public class XOctNode {
 	// / <param name="leaf">object-location composite</param>
 	// / <returns> true if the pution worked.</returns>
 	public boolean insert(X3DPoint point) {
-		//System.out.println("in insert.....point:.." + point.toString());
+		//System.out.println("in insert.....point:.." + point.toString());		
+		
 		if ((branches == null) && this.points.size() < this.max_points_per_node) {			
 			this.addPoint(point);			
 			return true;
 
 		} else {
-
 			if (branches == null) {
 				if (this.points.size() == this.max_points_per_node)
 					this.addPoint(point);
@@ -82,6 +82,7 @@ public class XOctNode {
 	// / into the branch.
 	// / </summary>
 	protected void split() {	
+		//System.out.println("............in split");
 		float btHalf = (float) (boundary.getTop() - (boundary.getTop() - boundary
 				.getBottom()) * 0.5); // bottom-top half
 		float lrHalf = (float) (boundary.getRight() - (boundary.getRight() - boundary
@@ -126,6 +127,7 @@ public class XOctNode {
 		
 		while (item.hasNext()) {
 			X3DPoint current = item.next();
+			//System.out.println("in split....... start insert....");
 			this.insert(current);
 		}
 
@@ -144,6 +146,7 @@ public class XOctNode {
 		}
 		if(!existed)
 			this.points.add(point);
+		
 	}
 
 
@@ -216,6 +219,10 @@ public class XOctNode {
 		return results;
 	}
 
+	public int getPointSize(){
+		return this.points.size(); 
+	}
+	
 	public String toSprintf() {
 		String msg = "";
 		msg = this.index + "\t";
@@ -259,7 +266,7 @@ public class XOctNode {
 						y, z);
 
 				if (childDistance < radius) {
-					System.out.println("the node is : " + branches[i].index);
+					//System.out.println("the node is : " + branches[i].index);
 					ArrayList tmp = branches[i].getNearPoints(x, y, z, radius,
 							nearPoints);
 					System.out.println(tmp.toString());

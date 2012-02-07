@@ -54,9 +54,7 @@ public class X3DPoint {
 	public boolean isEqual(X3DPoint point){
 		if(this.x == point.x &&
 		   this.y == point.y &&
-		   this.z == point.z &&
-           this.value == point.value				
-				)
+		   this.z == point.z)
 			return true;
 		return false;
 	}

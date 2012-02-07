@@ -46,7 +46,12 @@ public class CosmoConstant {
 	public static final int INDEX_POS_Z = 5;
 	
 	/********For indexing****************/
-	public static final String SPACE_INDEXING_FILE_NAME="./data/space-indexing";
+	public static final String SPACE_INDEXING_FILE_NAME="./data/space-indexing.scale";
 	
+	/**************************************/
+	public static final int COSMO_DATA_TYPE_LONG=0; // iOdrer
+	public static final int COSMO_DATA_TYPE_FLOAT=1; // other metrics
+	
+	public static final int COSMO_DATA_SCALE=10000000;
 	
 }

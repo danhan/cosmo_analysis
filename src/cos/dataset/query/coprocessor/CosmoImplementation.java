@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,9 +16,10 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.coprocessor.BaseEndpointCoprocessor;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
-import org.apache.hadoop.hbase.regionserver.KeyValueScanner;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.util.Bytes;
+
+import util.Common;
 
 public class CosmoImplementation extends BaseEndpointCoprocessor implements
 		CosmoProtocol {
@@ -27,128 +27,128 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 	static final Log log = LogFactory.getLog(CosmoImplementation.class);
 
 	@Override
-	public Map<String, String> propertyFilter(String[] result_families,
-			String[] result_columns, Scan scan) throws IOException {
+	public HashMap<String, HashMap<String, String>>  propertyFilter(String family, String proper_name,
+			String compareOp, int type, String threshold, Scan scan) throws IOException {
 
-		/*
-		 * if(result_columns != null){ for(int i=0;i<result_columns.length;i++){
-		 * scan
-		 * .addColumn(result_families[i].getBytes(),result_columns[i].getBytes
-		 * ()); } }
-		 */
-		log.debug("in the propertyFilter....");
+		System.out.println("in the propertyFilter....");
+	
 		InternalScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment())
 				.getRegion().getScanner(scan);
 
 		List<KeyValue> res = new ArrayList<KeyValue>();
-		Map<String, String> result = new HashMap<String, String>();
+		HashMap<String, HashMap<String, String>>  result = new HashMap<String, HashMap<String, String>> ();
 		boolean hasMoreResult = false;
 		try {
 			do {
 				hasMoreResult = scanner.next(res);
-				for (KeyValue kv : res) {
-					// log.debug("got a kv: " + kv);
-					log.debug("get buffer : " + Bytes.toString(kv.getBuffer()));
-					String id = Bytes.toString(kv.getRow());
-					// log.debug("result to be added is: " + availBikes +
-					// " id: " + id);
-					result.put(id, Bytes.toString((kv.getValue())));
+				String source = getValue(res,family,proper_name);
+				
+				if(null != source ){
+					if(Common.doCompare(type, source, compareOp, threshold)){
+						String id = Bytes.toString(res.get(0).getRow());
+						HashMap<String,String> row = new HashMap<String,String>();
+						for(KeyValue kv: res){						
+							row.put(kv.getKeyString(), Bytes.toString(kv.getValue()));								
+						}
+						result.put(id, row);
+					}
 				}
 				res.clear();
+				
 			} while (hasMoreResult);
 		} finally {
 			scanner.close();
 		}
-		log.debug("the result......" + result.size());
+		System.out.println("the result......" + result.size());
 		return result;
 	}
-
+	
+	private String getValue(List<KeyValue> res,String family,String proper_name){
+		String key = family+":"+proper_name;
+		for(KeyValue kv: res){			
+			if(kv.getKey().equals(key)){
+				return Bytes.toString(kv.getValue());
+			}
+		}
+		return null;
+	}
+	
+	
 	/****************************************************************
 	 * *********************For Schema1*****************************
 	 ***************************************************************/
-	public Collection<String> getUniqueCoprocs4S1(int type, long s1, long s2,
-			Scan scan) throws IOException {
+	public ArrayList<String> getUniqueCoprocs4S1(long s1, long s2,Scan scan) throws IOException {
 
-		System.out.println("in the propertyFilter....");
-
-		// scan.setTimeRange(1, 50);
-		scan.setMaxVersions(100);
-		// scan.addFamily("t".getBytes());
-		// scan.addColumn("t".getBytes(), "x".getBytes());
+		System.out.println("start to get unique in schema 1 between "+s1+" and "+s2);
 
 		RegionScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment())
 				.getRegion().getScanner(scan);
 
-		List<KeyValue> res = new ArrayList<KeyValue>();
-		HashMap<String, List<KeyValue>> backup = new HashMap<String, List<KeyValue>>();
-		Collection<String> result = new ArrayList<String>();
+		List<KeyValue> res = new ArrayList<KeyValue>();	
+		ArrayList<String> result = new ArrayList<String>();
 		boolean hasMoreResult = false;
 		System.out.println("*********Region information:"
-				+ scanner.getRegionInfo().getRegionId());
-
-		try {
-			int num = 0;
+				+ scanner.getRegionInfo().getRegionNameAsString());
+		int num = 0;
+		try {			
 			do {
-				hasMoreResult = scanner.next(res);
-				List<KeyValue> pairs = new LinkedList<KeyValue>();
-				String key = "";
-				for (KeyValue kv : res) {
-					key = Bytes.toString(kv.getRow());
-					System.out.println("key is : " + key + ";value=>"
-							+ Bytes.toString(kv.getValue()));
-					pairs.add(kv);
-				}
-				num++;
-				System.out.println("key: " + key + "; before adding size: "
-						+ backup.size() + ";scanner num:" + num);
-				backup.put(key, pairs);
-				System.out.println("key: " + key + ";after adding size: "
-						+ backup.size() + "");
+				hasMoreResult = scanner.next(res);	
+				if(res!=null){
+					if(isUnique(res,s1,s2)){						
+						result.add(Bytes.toString(res.get(0).getRow()));
+					}
+					num++;
+				}	
+				res.clear();
 			} while (hasMoreResult);
 
 		} finally {
 			scanner.close();
 		}
-		KVComparator compare = new KVComparator()
-				.getComparatorIgnoringTimestamps();
 
-		for (String key : backup.keySet()) {
-			List<KeyValue> kvList = backup.get(key);
-			for (int i = 0; i < kvList.size(); i++) {
-				System.out.println("key=>" + key + ";value=>"
-						+ kvList.toString());
-				if (i + 1 < kvList.size()) {
-					System.out.println("compare===================");
-					System.out
-							.println("result: "
-									+ compare.compare(kvList.get(i),
-											kvList.get(i + 1)));
-				}
-
-			}
-		}
-
-		log.debug("the result......" + result.size());
-
+		System.out.println("total_number=>"+num+";result=>" + result.size());
 		return result;
 
 	}
+	////kv map : {timestamp=24, family=t, qualifier=x, row=map-2-12345, vlen=6}
+	private boolean isUnique(List<KeyValue> res,long s1, long s2){		
+		long[] versions = {0,0};
+		Map<String,Object> map = null;
+		for(KeyValue kv:res){			
+			map = kv.toStringMap();
+			long timestamp = (Long)map.get("timestamp");		
+			if(timestamp == s1){
+				versions[0] = 1;
+			}else if(timestamp == s2){
+				versions[1] = 1;
+			}else{
+				throw new RuntimeException("other timestamps are returned");
+			}
+			if((versions[0]==1) && (versions[1]==1))
+				break;
+		}		
+		return ((versions[0] == 1) && (versions[1] == 0));		
+	}
+	
+	
 
 	/****************************************************************
 	 * *********************For Schema2*****************************
 	 ***************************************************************/
 
-	public Collection<String> getUniqueCoprocs4S2(int type, long s1, long s2,
+	public ArrayList<String> getUniqueCoprocs4S2(long s1, long s2,
 			Scan scan) throws IOException {
 
-		log.debug("in the propertyFilter....");
+		System.out.println("start to get unique in schema2 between "+s1+" and "+s2);
 
-		InternalScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment())
+		RegionScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment())
 				.getRegion().getScanner(scan);
 
 		List<KeyValue> res = new ArrayList<KeyValue>();
-		Collection<String> result = new ArrayList<String>();
-		Collection<String> other = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> other = new ArrayList<String>();		
+		System.out.println("*********Region information:"+ scanner.getRegionInfo().getRegionNameAsString());
+		
 		boolean hasMoreResult = false;
 		try {
 			do {
@@ -156,24 +156,21 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 				for (KeyValue kv : res) {
 					String key = Bytes.toString(kv.getRow());
 					if (key.startsWith((String.valueOf(s1) + "-"))) {
-						result.add(key.substring(key.lastIndexOf('-'),
-								key.length()));
+						result.add(key);
 					} else if (key.startsWith(String.valueOf(s2) + "-")) {
-						other.add(key.substring(key.lastIndexOf('-'),
-								key.length()));
+						other.add(key);
 					}
+					break;
 				}
 				res.clear();
-			} while (hasMoreResult);
-
-			boolean r = result.removeAll(other);
-			if (!r)
-				throw new IOException("the removeall is wrong");
+			} while (hasMoreResult);			
+			if(result != null && result.size()>0){
+				result.removeAll(other);
+			}
 		} finally {
 			scanner.close();
 		}
-
-		log.debug("the result......" + result.size());
+		System.out.println("the result......" + result.size());
 
 		return result;
 	}

@@ -104,16 +104,16 @@ public class InsertData4Cosmo {
 						values[i-2] = metrics[i];						
 					}
 					// TODO get index from the tree
-					float x = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_X]);
-					float y = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_Y]);
-					float z = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_Z]);
-					String index =this.tree.lookup(x, y, z).getIndex();					
+//					float x = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_X]);
+//					float y = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_Y]);
+//					float z = Float.parseFloat(metrics[CosmoConstant.INDEX_POS_Z]);
+//					String index =this.tree.lookup(x, y, z).getIndex();					
 										
 					if(schema==1){
-						String rowKey = index+"-"+type+"-"+metrics[CosmoConstant.INDEX_PID];						
+						String rowKey = type+"-"+metrics[CosmoConstant.INDEX_PID];						
 						hbase.insertRow(rowKey, families, qualifers, snapshot, values);
 					}else if(schema==2){
-						String rowKey = snapshot+"-"+index+"-"+type+"-"+metrics[CosmoConstant.INDEX_PID];						
+						String rowKey = snapshot+"-"+type+"-"+metrics[CosmoConstant.INDEX_PID];						
 						hbase.insertRow(rowKey, families, qualifers, -1, values);
 					}
 					num_of_particle++;

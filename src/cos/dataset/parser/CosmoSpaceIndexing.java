@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.util.LinkedList;
 import java.util.List;
 
+import util.octree.X3DPoint;
 import util.octree.XOcTree;
 import util.octree.XOctNode;
 
@@ -16,12 +17,13 @@ public class CosmoSpaceIndexing {
 	String inputDir = null;
 	String outFile = null;
 	XOcTree tree = null;
-
+	
 	public CosmoSpaceIndexing(float xMin, float xMax, float yMin, float yMax,
 			float zMin, float zMax, int max_item_per_node) throws Exception {
-
+		
 		this.tree = new XOcTree(xMin, xMax, yMin, yMax, zMin, zMax,
-				max_item_per_node);
+				max_item_per_node,CosmoConstant.COSMO_DATA_SCALE);
+		
 	}
 
 	public void execute(String inputDir, String outFile) {
@@ -30,6 +32,7 @@ public class CosmoSpaceIndexing {
 			this.outFile = outFile;
 			long s_time = System.currentTimeMillis();
 			int count = 0;
+			int failed = 0;
 			for (String fileName : fileNameList) {
 				BufferedReader input = null;
 				try {
@@ -47,12 +50,16 @@ public class CosmoSpaceIndexing {
 						long pid = Long
 								.parseLong(items[CosmoConstant.INDEX_PID]);						
 						count++;
-						this.tree.insert(x, y, z, pid);
+						if(!this.tree.insert(x, y, z, pid)){
+							System.out.println(x+";"+y+";"+z+"; "+pid);
+							failed++;
+						}
+							
 						
 						line = input.readLine();
 					}
 					if (line == null) {
-						System.out.println("finish indexing file: " + fileName);
+						System.out.println("finish indexing file: " + fileName+"failed: "+failed);						
 						input.close();
 					}
 				} catch (Exception e) {
@@ -114,10 +121,13 @@ public class CosmoSpaceIndexing {
 				output = new BufferedWriter(new FileWriter(this.outFile));
 				List<XOctNode> nodes = new LinkedList<XOctNode>();
 				nodes = tree.getAllLeafNode(nodes);
+				int total_num = 0;
 				for (int i = 0; i < nodes.size(); i++) {
 					XOctNode node = nodes.get(i);
+					total_num+=nodes.get(i).getPointSize();
 					output.write(node.toSprintf() + "\n");
 				}
+				output.write(total_num+"\n");
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -144,7 +154,12 @@ public class CosmoSpaceIndexing {
 				outFile = args[1];//"./data/space-indexing";
 			
 			CosmoSpaceIndexing indexing = new CosmoSpaceIndexing(-1, 1, -1, 1,-1, 1, 1000);
-			indexing.execute(inputDir, null);
+			indexing.execute(inputDir, outFile);
+			
+			List<X3DPoint> points = new LinkedList<X3DPoint>();
+			indexing.getTree().getAllObjects(points);
+			System.out.println("all points: "+points.size());
+			//for(int i=0;i<points.size())
 			
 			// look up one point
 			long s_time = System.currentTimeMillis();
@@ -154,6 +169,7 @@ public class CosmoSpaceIndexing {
 			System.out.println(indexing.getTree().lookup(x,y,z));
 			System.out.println("looking up exe_time=>"+(System.currentTimeMillis()-s_time));
 
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
