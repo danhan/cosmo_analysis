@@ -251,18 +251,7 @@ public class HBaseUtil {
 						key_values.put(key, oneRow);
 					}					
 				}				
-				// TODO store them into files
-				if (count < 5) {
-					for (String k : key_values.keySet()) {
-						System.out.println("key=>" + key);
-						HashMap<String, String> kv = key_values.get(k);
-						for (String q : kv.keySet()) {
-							System.out.print(q + "=>" + kv.get(q) + "; ");
-						}
-					}
-					System.out.println();
-				}				
-
+				// TODO store the result into files				
 			}
 		
 		}catch(Exception e){
@@ -270,10 +259,7 @@ public class HBaseUtil {
 		}
 
 		return key_values;				
-	}
-	
-
-	
+	}	
 	
 	// Note: there is a jar file from google: google-collections-0.8.jar need to be imported.
 	public Filter getTimeStampFilter(List<Long> timestamps) throws Exception{

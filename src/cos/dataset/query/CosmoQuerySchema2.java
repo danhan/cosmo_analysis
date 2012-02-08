@@ -27,7 +27,7 @@ public class CosmoQuerySchema2 extends CosmoQueryAbstraction{
 
 	
 	public CosmoQuerySchema2() {
-		tableName = CosmoConstant.TABLE_NAME;
+		tableName = CosmoConstant.TABLE_NAME_2;
 		familyName = new String[]{CosmoConstant.FAMILY_NAME};
 		try{
 			this.setHBase();	

@@ -5,13 +5,13 @@
 	
 	<property name="src.root" location="../" />
 	
-	<property name="bixi.src" location="${src.root}/Cosmology"/>
+	<property name="cosmo.src" location="${src.root}/Cosmology"/>
 	
 	<property name="java.home" value="${env.JAVA_HOME}" />
 	<property name="ant.home" value="${env.ANT_HOME}" />
-	<property name="bin.home" value="${bixi.src}/bin" />	
-	<property name="lib.home" value="${bixi.src}/lib" />
-	<property name="src.home" value="${bixi.src}/src" />
+	<property name="bin.home" value="${cosmo.src}/bin" />	
+	<property name="lib.home" value="${cosmo.src}/lib" />
+	<property name="src.home" value="${cosmo.src}/src" />
 	
 	<property name="hbase.home" location="${env.HBASE_HOME}" />
 	<property name="hadoop.home" location="${env.HADOOP_HOME}" />

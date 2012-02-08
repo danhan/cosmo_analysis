@@ -37,14 +37,13 @@ public class InsertData4Cosmo {
 		String fileDir = args[1];
 		
 		//create space indexing tree
-		try{
-			CosmoSpaceIndexing indexing = new CosmoSpaceIndexing(-1, 1, -1, 1,-1, 1, 1000);
-			indexing.execute(fileDir, fileDir+"/"+CosmoConstant.SPACE_INDEXING_FILE_NAME);
-			inserter.setIndexingTree(indexing.getTree());
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
+//		try{
+//			CosmoSpaceIndexing indexing = new CosmoSpaceIndexing(-1, 1, -1, 1,-1, 1, 1000);
+//			indexing.execute(fileDir, fileDir+"/"+CosmoConstant.SPACE_INDEXING_FILE_NAME);
+//			inserter.setIndexingTree(indexing.getTree());
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}		
 		//
 		inserter.upload(schema,fileDir);
 		
