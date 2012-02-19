@@ -5,8 +5,8 @@ public class CosmoConstant {
 	public enum ENUM_GAS {
 		iOrder, mass, pos_x, pos_y, pos_z, velocity_x, velocity_y, velocity_z, phi, rho, temp, hsmooth, metals;
 		public static String toHeader() {
-			return "iOrder\t" + "mass\t" + "pos_x\t" + "pos_y\t" + "pos_z\t"
-					+ "velocity_x\t" + "velocity_y\t" + "velocity_z\t" + "phi"
+			return "id\t" + "mass\t" + "px\t" + "py\t" + "pz\t"
+					+ "vx\t" + "vy\t" + "vz\t" + "phi\t"
 					+ "rho\t" + "temp\t" + "hsmooth\t" + "metals\n";
 		}
 	};
@@ -14,8 +14,8 @@ public class CosmoConstant {
 	public enum ENUM_DARK_MATTER {
 		iOrder, mass, pos_x, pos_y, pos_z, velocity_x, velocity_y, velocity_z, phi, eps;
 		public static String toHeader() {
-			return "iOrder\t" + "mass\t" + "pos_x\t" + "pos_y\t" + "pos_z\t"
-					+ "velocity_x\t" + "velocity_y\t" + "velocity_z\t" + "phi"
+			return "id\t" + "mass\t" + "px\t" + "py\t" + "pz\t"
+					+ "vx\t" + "vy\t" + "vz\t" + "phi\t"
 					+ "eps\n";
 		}
 	};
@@ -23,8 +23,8 @@ public class CosmoConstant {
 	public enum ENUM_STAR {
 		iOrder, mass, pos_x, pos_y, pos_z, velocity_x, velocity_y, velocity_z, phi, metals, tform, eps;
 		public static String toHeader() {
-			return "iOrder\t" + "mass\t" + "pos_x\t" + "pos_y\t" + "pos_z\t"
-					+ "velocity_x\t" + "velocity_y\t" + "velocity_z\t" + "phi"
+			return "id\t" + "mass\t" + "px\t" + "py\t" + "pz\t"
+					+ "vx\t" + "vy\t" + "vz\t" + "phi\t"
 					+ "metals\t"+"tform\t"+"eps\n";
 		}		
 	};
@@ -37,7 +37,7 @@ public class CosmoConstant {
 	
 	public final static String TABLE_NAME_2 = "cosmo50.2";
 	
-	public static final int MAX_VERION = 1000; 
+	public static final int MAX_VERION = 15; 
 	
 	public static final int INDEX_NO = 0;
 	public static final int INDEX_PID = 1;

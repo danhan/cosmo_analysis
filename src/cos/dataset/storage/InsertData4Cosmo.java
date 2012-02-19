@@ -68,10 +68,9 @@ public class InsertData4Cosmo {
 		for (String fileName : fileNames) {
 			if (!fileName.endsWith(".out"))
 				continue;
-			System.out.println("file name : "+fileName);
+			System.out.println("start to insert file name : "+fileName);
 			
-			long snapshot = Long.parseLong(fileName.split(CosmoConstant.FILE_NAME_DELIMITER)[2]);
-			fileName = fileDir + "/" + fileName;
+			long snapshot = Long.parseLong(fileName.split(CosmoConstant.FILE_NAME_DELIMITER)[2]);			
 		
 			int type = 0;
 			if (fileName.contains("gas")) {				
@@ -81,10 +80,10 @@ public class InsertData4Cosmo {
 			} else if (fileName.contains("star")) {
 				type = 2;
 			}			
-			
+			System.out.println("type: "+type);
 			BufferedReader in = null;
 			try {
-				in = new BufferedReader(new FileReader(fileName));				
+				in = new BufferedReader(new FileReader(fileDir + "/" + fileName));				
 				String header = in.readLine(); // skip the header	
 				String[] columns = header.split(CosmoConstant.METRICS_DELIMETER);
 				String[] qualifers = new String[columns.length-2];
@@ -95,8 +94,12 @@ public class InsertData4Cosmo {
 					families[i-2] = CosmoConstant.FAMILY_NAME;
 				}
 									 
-				String line = in.readLine();
-				while(line != null){
+				String line = in.readLine().trim();
+				while(line != null){					
+					if(line.length()==0){
+						System.out.println("Blank Line !!! ");
+						continue;
+					}
 					String[] metrics = line.split(CosmoConstant.METRICS_DELIMETER);
 					String[] values = new String[metrics.length-1];					
 					for(int i=2;i<metrics.length;i++){
@@ -116,8 +119,14 @@ public class InsertData4Cosmo {
 						hbase.insertRow(rowKey, families, qualifers, -1, values);
 					}
 					num_of_particle++;
-					line = in.readLine();
+					if(num_of_particle==100){
+						num_of_particle = 0;
+						break;						
+					}
+						
+					line = in.readLine().trim();
 				}
+				in.close();
 				
 			} catch (Exception e) {
 				e.printStackTrace();

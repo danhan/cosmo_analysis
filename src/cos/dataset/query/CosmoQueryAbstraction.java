@@ -40,7 +40,7 @@ public abstract class CosmoQueryAbstraction {
 	}	
 	
 	//Q1 : Return all particles whose property X is above a given threshold at step S1
-	public abstract void propertyFilter(String family, String proper_name,
+	public abstract void propertyFilter(String particleType,String family, String proper_name,
 			String compareOp, int type,String threshold, long snapshot,
 			String[] result_families, String[] result_columns);
 	
@@ -60,7 +60,7 @@ public abstract class CosmoQueryAbstraction {
 	
 	/*************************For Coprocessor**************************************************/
 	
-	public abstract HashMap<String, HashMap<String,String>> propertyFilterCoprocs(final String family,final String proper_name,
+	public abstract HashMap<String, HashMap<String,String>> propertyFilterCoprocs(final String particleType,final String family,final String proper_name,
 			final String compareOp, final int type, final String threshold, long snapshot,
 			final String[] result_families, final String[] result_columns);
 	

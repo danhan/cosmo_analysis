@@ -65,15 +65,17 @@ public abstract class QueryClientBase {
 
 	private void exePropertyFilter(String property_name) {
 		String property = configure.getProperty(property_name);
+		System.out.println(property);
 		String[] items = property.split(";");
-		String family = items[0];
-		String column = items[1];
-		String compareOp = items[2];
-		String threshold = items[3];
-		long snapshot = Long.parseLong(items[4]);
+		String pType = items[0];
+		String family = items[1];
+		String column = items[2];
+		String compareOp = items[3];
+		String threshold = items[4];
+		long snapshot = Long.parseLong(items[5]);
 		int type = CosmoConstant.COSMO_DATA_TYPE_FLOAT;
 		for(int i=0;i<this.num_of_run;i++){
-			this.queryEngine.propertyFilter(family, column, compareOp, type,
+			this.queryEngine.propertyFilter(pType,family, column, compareOp, type,
 					threshold, snapshot, null, null);	
 		}
 		
@@ -81,6 +83,7 @@ public abstract class QueryClientBase {
 
 	private void exeGetUnique(String property_name) {
 		String property = configure.getProperty(property_name);
+		System.out.println(property);
 		String[] items = property.split(";");
 		int type = Integer.parseInt(items[0]);
 		long s1 = Long.parseLong(items[1]);
@@ -94,15 +97,17 @@ public abstract class QueryClientBase {
 
 	private void exePropertyFilterCorpcs(String property_name) {
 		String property = configure.getProperty(property_name);
+		System.out.println(property);
 		String[] items = property.split(";");
-		String family = items[0];
-		String column = items[1];
-		String compareOp = items[2];
-		String threshold = items[3];
-		long snapshot = Long.parseLong(items[4]);
+		String pType = items[0];
+		String family = items[1];
+		String column = items[2];
+		String compareOp = items[3];
+		String threshold = items[4];
+		long snapshot = Long.parseLong(items[5]);
 		int type = CosmoConstant.COSMO_DATA_TYPE_FLOAT;
 		for(int i=0;i<this.num_of_run;i++){
-			this.queryEngine.propertyFilterCoprocs(family, column, compareOp, type,
+			this.queryEngine.propertyFilterCoprocs(pType,family, column, compareOp, type,
 					threshold, snapshot, null, null);
 		}
 		
@@ -110,6 +115,7 @@ public abstract class QueryClientBase {
 
 	private void exeGetUniqueCoprocs(String property_name) {
 		String property = configure.getProperty(property_name);
+		System.out.println(property);
 		String[] items = property.split(";");
 		int type = Integer.parseInt(items[0]);
 		long s1 = Long.parseLong(items[1]);
@@ -118,5 +124,5 @@ public abstract class QueryClientBase {
 			this.queryEngine.getUniqueCoprocs(type, s1, s2);	
 		}
 	}
-
+	
 }

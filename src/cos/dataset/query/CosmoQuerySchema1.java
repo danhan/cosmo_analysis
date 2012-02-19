@@ -42,7 +42,7 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 	// Q1 : Return all particles whose property X is above a given threshold at
 	// step S1
 	@Override
-	public void propertyFilter(String family, String proper_name,
+	public void propertyFilter(String particleType,String family, String proper_name,
 			String compareOp, int type,String threshold, long snapshot,
 			String[] result_families, String[] result_columns) {
 		ResultScanner rScanner = null;
@@ -53,6 +53,8 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 			timestamps.add(snapshot);
 			Filter timeStampFilter = hbaseUtil.getTimeStampFilter(timestamps);
 			filterList.addFilter(timeStampFilter);
+			Filter rowFilter = hbaseUtil.getRowFilter("=", "^("+particleType+"-)");	
+			filterList.addFilter(rowFilter);
 
 			long s_time = System.currentTimeMillis();
 
@@ -63,6 +65,14 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 			
 			long e_time = System.currentTimeMillis();
 			long exe_time = e_time - s_time;
+			
+			for(String key: key_values.keySet()){
+				System.out.print(key+"\t");
+				HashMap<String,String> map = key_values.get(key);
+				for(String item: map.keySet()){
+					//System.out.print(item+"\t"+)
+				}
+			}
 			
 			// TODO store the time into database
 			System.out.print("exe_time" + "\t" + "num_of_row" + "\n");
@@ -159,7 +169,7 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
  * 	*****************Coprocessor Client************************
  **************************************************************/
 	
-	public HashMap<String, HashMap<String,String>> propertyFilterCoprocs(final String family,final String proper_name,
+	public HashMap<String, HashMap<String,String>> propertyFilterCoprocs(final String particleType,final String family,final String proper_name,
 			final String compareOp, final int type, final String threshold, long snapshot,
 			final String[] result_families, final String[] result_columns){
 		
@@ -180,7 +190,10 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 			List<Long> timestamps = new LinkedList<Long>();
 			timestamps.add(snapshot);
 			Filter timeStampFilter = hbaseUtil.getTimeStampFilter(timestamps);
-			fList.addFilter(timeStampFilter);		    
+			fList.addFilter(timeStampFilter);
+			Filter rowFilter = hbaseUtil.getRowFilter("=", "^("+particleType+"-)");	
+			fList.addFilter(rowFilter);
+			
 		    final Scan scan = hbaseUtil.generateScan(fList, result_families, result_columns);
 		    System.out.println("start to send the query.....");
 

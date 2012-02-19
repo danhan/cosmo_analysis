@@ -38,12 +38,12 @@ public class CosmoQuerySchema2 extends CosmoQueryAbstraction{
 	
 	
 	@Override
-	public void propertyFilter(String family, String proper_name,
+	public void propertyFilter(String particleType,String family, String proper_name,
 			String compareOp, int type,String threshold, long snapshot,
 			String[] result_families, String[] result_columns) {
 		try{
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);				
-			Filter rowFilter = hbaseUtil.getRowFilter("=", "^("+snapshot+"-)");	
+			Filter rowFilter = hbaseUtil.getRowFilter("=", "^("+snapshot+"-"+particleType+"-)");	
 			fList.addFilter(rowFilter);
 						
 			long s_time = System.currentTimeMillis();
@@ -127,7 +127,7 @@ public class CosmoQuerySchema2 extends CosmoQueryAbstraction{
 /*********************************************************************************
  * *******************************Coprocessor*************************************	
  ********************************************************************************/
-	public  HashMap<String, HashMap<String,String>> propertyFilterCoprocs(final String family, final String proper_name,
+	public  HashMap<String, HashMap<String,String>> propertyFilterCoprocs(final String particleType,final String family, final String proper_name,
 			final String compareOp, final int type, final String threshold, long snapshot,
 			final String[] result_families, final String[] result_columns){
 		
@@ -146,7 +146,7 @@ public class CosmoQuerySchema2 extends CosmoQueryAbstraction{
 		    
 		    
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);			
-			Filter rowFilter = hbaseUtil.getRowFilter("=", "^("+snapshot+"-)");			
+			Filter rowFilter = hbaseUtil.getRowFilter("=", "^("+snapshot+"-"+particleType+"-)");			
 			fList.addFilter(rowFilter);			    		    
 		    final Scan scan = hbaseUtil.generateScan(fList, result_families, result_columns);
 		    

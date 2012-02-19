@@ -28,6 +28,7 @@ import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.TimestampsFilter;
+import org.apache.hadoop.hbase.io.hfile.Compression;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import util.Common;
@@ -161,7 +162,7 @@ public class HBaseUtil {
 		//log.info("exit");
 	}
 		
-	
+	//create 'mytable', {NAME=>'colfam:', COMPRESSION=>'lzo'}
 	private synchronized HTableDescriptor createTableDescription(String tableName,String[] metrics,int max_version){
 		//log.info("entry: "+tableName + ":"+metrics);
 		HTableDescriptor td = new HTableDescriptor(tableName);
@@ -174,6 +175,8 @@ public class HBaseUtil {
 				}
 				HColumnDescriptor hcd = new HColumnDescriptor(colName);
 				hcd.setMaxVersions(max_version);
+				// compress it and require to install LZO
+				hcd.setCompressionType(Compression.Algorithm.GZ);
 				td.addFamily(hcd);
 			}						
 		}catch(Exception e){
