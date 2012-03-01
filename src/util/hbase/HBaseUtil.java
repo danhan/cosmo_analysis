@@ -1,6 +1,7 @@
 package util.hbase;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -29,6 +30,7 @@ import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.TimestampsFilter;
 import org.apache.hadoop.hbase.io.hfile.Compression;
+import org.apache.hadoop.hbase.regionserver.StoreFile.BloomType;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import util.Common;
@@ -53,6 +55,10 @@ public class HBaseUtil {
 				this.conf = conf;
 			
 			this.conf.set("hbase.zookeeper.property.clientPort","2181");
+			this.conf.set("hbase.client.pause", "20");
+			this.conf.set("hbase.client.retries.number", "11");
+			this.conf.set("hbase.ipc.client.tcpnodelay","true");
+			this.conf.set("ipc.ping.interval", "3000");
 			
 			this.admin = new HBaseAdmin(this.conf);
 		}catch(Exception e){
@@ -67,7 +73,7 @@ public class HBaseUtil {
 	
 	public void setScanConfig(int cacheSize,boolean blockCache){
 		this.cacheSize = cacheSize;
-		this.blockCached = blockCached;
+		this.blockCached = blockCache;
 	}
 
 	
@@ -92,7 +98,7 @@ public class HBaseUtil {
 	public HTable getTableHandler(String tableName){
 		try{
 			table = new HTable(conf, tableName);
-			table.setAutoFlush(true);	
+			table.setAutoFlush(false);	
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -120,6 +126,38 @@ public class HBaseUtil {
 		table.put(put);
 	}
 	
+	public Put constructRow(String rowKey,String[] families, String[] qualifiers, long ts,String[] values) throws Exception{
+		if(table == null)
+			throw new Exception("No table handler");
+		
+		Put put = new Put(rowKey.getBytes());
+		put.setWriteToWAL(false);
+		for(int i=0;i<families.length;i++){
+			if(ts > 0){
+				put.add(families[i].getBytes(), qualifiers[i].getBytes(), ts, values[i].getBytes());
+			}else{
+				put.add(families[i].getBytes(), qualifiers[i].getBytes(),values[i].getBytes());
+			}			
+		}		
+		
+		return put;
+		
+	}
+	
+	public void flushBufferedRow(ArrayList<Put> putList)throws Exception{
+		long start = System.currentTimeMillis();
+		try{			
+			table.setAutoFlush(false);
+			table.setWriteBufferSize(1024*1024*12);
+			table.put(putList);	
+			table.setAutoFlush(true);			
+			System.out.println("flushrow=> "+putList.size()+";exe time=>"+(System.currentTimeMillis()-start));	
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+				
+	}
+		
 	public void closeTableHandler(){
 		try{
 			if (table != null) 
@@ -175,8 +213,9 @@ public class HBaseUtil {
 				}
 				HColumnDescriptor hcd = new HColumnDescriptor(colName);
 				hcd.setMaxVersions(max_version);
+				hcd.setBloomFilterType(BloomType.ROWCOL);
 				// compress it and require to install LZO
-				hcd.setCompressionType(Compression.Algorithm.GZ);
+				//hcd.setCompressionType(Compression.Algorithm.GZ);
 				td.addFamily(hcd);
 			}						
 		}catch(Exception e){

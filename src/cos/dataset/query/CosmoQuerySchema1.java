@@ -170,7 +170,7 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
  **************************************************************/
 	
 	public HashMap<String, HashMap<String,String>> propertyFilterCoprocs(final String particleType,final String family,final String proper_name,
-			final String compareOp, final int type, final String threshold, long snapshot,
+			final String compareOp, final int dataType, final String threshold, long snapshot,
 			final String[] result_families, final String[] result_columns){
 		
 		try{
@@ -203,7 +203,7 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 		      public HashMap<String, HashMap<String,String>> call(CosmoProtocol instance)
 		          throws IOException {  
 		    	  System.out.println("in the call function");
-		        return instance.propertyFilter(family,proper_name,compareOp,type,threshold,scan);			        
+		        return instance.propertyFilter(family,proper_name,compareOp,dataType,threshold,scan);			        
 		        
 		      };
 		    }, callBack);	

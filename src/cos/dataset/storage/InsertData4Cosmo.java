@@ -4,17 +4,20 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Put;
+
 import util.hbase.HBaseUtil;
 import util.octree.XOcTree;
 import cos.dataset.parser.CosmoConstant;
-import cos.dataset.parser.CosmoSpaceIndexing;
 
 public class InsertData4Cosmo {
 
 	HBaseUtil hbase = null;
 	XOcTree tree = null;
+	boolean debug = false;
 	
 	/**
 	 * @throws IOException
@@ -35,6 +38,11 @@ public class InsertData4Cosmo {
 		int schema = Integer.parseInt(args[0]);
 		InsertData4Cosmo inserter = new InsertData4Cosmo(schema);		
 		String fileDir = args[1];
+		int batchRow = 10000;
+		if(args.length>=3)
+			batchRow = Integer.valueOf(args[2]);
+		if(args.length==4)
+			inserter.debug = true;
 		
 		//create space indexing tree
 //		try{
@@ -45,7 +53,7 @@ public class InsertData4Cosmo {
 //			e.printStackTrace();
 //		}		
 		//
-		inserter.upload(schema,fileDir);
+		inserter.upload(schema,batchRow,fileDir);
 		
 	}
 	
@@ -53,7 +61,7 @@ public class InsertData4Cosmo {
 		this.tree = tree;
 	}
 	
-	private void upload(int schema,String fileDir) {
+	private void upload(int schema,int batchRow,String fileDir) {
 
 		File dir = new File(fileDir);
 		if (!dir.isDirectory()) {
@@ -82,6 +90,7 @@ public class InsertData4Cosmo {
 			}			
 			System.out.println("type: "+type);
 			BufferedReader in = null;
+			int totalRow = 0;
 			try {
 				in = new BufferedReader(new FileReader(fileDir + "/" + fileName));				
 				String header = in.readLine(); // skip the header	
@@ -95,7 +104,10 @@ public class InsertData4Cosmo {
 				}
 									 
 				String line = in.readLine().trim();
-				while(line != null){					
+				ArrayList<Put> putList = new ArrayList<Put>();
+				
+				while(line != null){
+					line = line.trim();
 					if(line.length()==0){
 						System.out.println("Blank Line !!! ");
 						continue;
@@ -113,19 +125,38 @@ public class InsertData4Cosmo {
 										
 					if(schema==1){
 						String rowKey = type+"-"+metrics[CosmoConstant.INDEX_PID];						
-						hbase.insertRow(rowKey, families, qualifers, snapshot, values);
+						Put put = hbase.constructRow(rowKey, families, qualifers, snapshot, values);
+						putList.add(put);
 					}else if(schema==2){
 						String rowKey = snapshot+"-"+type+"-"+metrics[CosmoConstant.INDEX_PID];						
-						hbase.insertRow(rowKey, families, qualifers, -1, values);
+						Put put = hbase.constructRow(rowKey, families, qualifers, -1, values);
+						putList.add(put);
 					}
 					num_of_particle++;
-					if(num_of_particle==100){
-						num_of_particle = 0;
-						break;						
+					if(debug){
+						if(num_of_particle==100){
+							num_of_particle = 0;
+							break;						
+						}	
 					}
-						
-					line = in.readLine().trim();
+					if(putList.size() == batchRow){
+						hbase.flushBufferedRow(putList);
+						totalRow += batchRow;
+						System.out.println(totalRow+" rows has been uploaded for file"+fileName);
+						putList.clear();
+					}
+					line = in.readLine();					
+					
 				}
+				// for the last lines
+				if(putList.size()>0){
+					hbase.flushBufferedRow(putList);
+					totalRow += putList.size();
+					System.out.println(totalRow+" rows has been uploaded for file"+fileName);
+					putList.clear();					
+				}
+			
+								
 				in.close();
 				
 			} catch (Exception e) {
@@ -134,6 +165,7 @@ public class InsertData4Cosmo {
 				try {
 					if (in != null)
 						in.close();
+						this.hbase.closeTableHandler();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -141,7 +173,7 @@ public class InsertData4Cosmo {
 
 		}
 
-		System.out.println("execution time: "+ (System.currentTimeMillis() - start)+";total_number:"+num_of_particle);
+		System.out.println("execution time(ms): "+ (System.currentTimeMillis() - start)+";total_number:"+num_of_particle);
 	}
 
 }

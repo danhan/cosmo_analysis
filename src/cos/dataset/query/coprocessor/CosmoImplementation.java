@@ -25,7 +25,7 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 
 	@Override
 	public HashMap<String, HashMap<String, String>>  propertyFilter(String family, String proper_name,
-			String compareOp, int type, String threshold, Scan scan) throws IOException {
+			String compareOp, int dataType, String threshold, Scan scan) throws IOException {
 
 		System.out.println("in the propertyFilter....");
 	
@@ -38,16 +38,18 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 		try {
 			do {
 				hasMoreResult = scanner.next(res);
-				String source = getValue(res,family,proper_name);
+				String source = this.getValue(res,family,proper_name);
 				
 				if(null != source ){
-					if(Common.doCompare(type, source, compareOp, threshold)){
+					if(Common.doCompare(dataType, source, compareOp, threshold)){
 						String id = Bytes.toString(res.get(0).getRow());
 						HashMap<String,String> row = new HashMap<String,String>();
 						for(KeyValue kv: res){						
 							row.put(kv.getKeyString(), Bytes.toString(kv.getValue()));								
 						}
 						result.put(id, row);
+					}else{
+						System.out.println("do compare: "+ source + " <> "+threshold);
 					}
 				}
 				res.clear();

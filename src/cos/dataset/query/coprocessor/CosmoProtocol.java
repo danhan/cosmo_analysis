@@ -11,7 +11,7 @@ public interface CosmoProtocol extends CoprocessorProtocol{
 
 	// for both of them, because their is what   
 	public HashMap<String, HashMap<String, String>>  propertyFilter(String family, String proper_name,
-			String compareOp,int type, String threshold,Scan scan) throws IOException;
+			String compareOp,int dataType, String threshold,Scan scan) throws IOException;
 	  
 	  // 
 	ArrayList<String> getUniqueCoprocs4S1(long s1, long s2,Scan scan) throws IOException;
