@@ -28,6 +28,7 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 			String compareOp, int dataType, String threshold, Scan scan) throws IOException {
 
 		System.out.println("in the propertyFilter....");
+		
 	
 		InternalScanner scanner = ((RegionCoprocessorEnvironment) getEnvironment())
 				.getRegion().getScanner(scan);
@@ -39,6 +40,7 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 			do {
 				hasMoreResult = scanner.next(res);
 				String source = this.getValue(res,family,proper_name);
+				//System.out.println(family+":"+proper_name+"="+source);
 				
 				if(null != source ){
 					if(Common.doCompare(dataType, source, compareOp, threshold)){
@@ -49,7 +51,7 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 						}
 						result.put(id, row);
 					}else{
-						System.out.println("do compare: "+ source + " <> "+threshold);
+						//System.out.println("do compare: "+ source + " <> "+threshold);
 					}
 				}
 				res.clear();
@@ -63,10 +65,11 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 	}
 	
 	private String getValue(List<KeyValue> res,String family,String proper_name){
-		String key = family+":"+proper_name;
-		for(KeyValue kv: res){			
-			if(kv.getKey().equals(key)){
-				return Bytes.toString(kv.getValue());
+		//System.out.println(family+": "+proper_name);		
+		for(KeyValue kv: res){				
+			//System.out.println(kv.toStringMap().toString());		
+			if(Bytes.toString(kv.getQualifier()).equals(proper_name) && Bytes.toString(kv.getFamily()).equals(family)){
+				return Bytes.toString(kv.getValue());				
 			}
 		}
 		return null;
@@ -115,6 +118,7 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 		Map<String,Object> map = null;
 		for(KeyValue kv:res){			
 			map = kv.toStringMap();
+			//System.out.println("map is "+map);
 			long timestamp = (Long)map.get("timestamp");		
 			if(timestamp == s1){
 				versions[0] = 1;
@@ -126,6 +130,7 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 			if((versions[0]==1) && (versions[1]==1))
 				break;
 		}		
+		//System.out.println("result is: "+versions[0]+";"+versions[1]);
 		return ((versions[0] == 1) && (versions[1] == 0));		
 	}
 	
@@ -154,18 +159,28 @@ public class CosmoImplementation extends BaseEndpointCoprocessor implements
 				hasMoreResult = scanner.next(res);
 				for (KeyValue kv : res) {
 					String key = Bytes.toString(kv.getRow());
+					//System.out.println("key: "+key);
+					String item = key.substring(key.indexOf('-')+1,key.length());
 					if (key.startsWith((String.valueOf(s1) + "-"))) {
-						result.add(key);
+						if (!result.contains(item)){
+							result.add(item);
+						}							
 					} else if (key.startsWith(String.valueOf(s2) + "-")) {
-						other.add(key);
+						if(!other.contains(item)){
+							other.add(item);
+						}						
 					}
 					break;
 				}
 				res.clear();
-			} while (hasMoreResult);			
+			} while (hasMoreResult);
+			
+			//System.out.println("result: "+result.size()+": "+result.toString());
+			//System.out.println("other: "+other.size()+": "+other.toString());
 			if(result != null && result.size()>0){
 				result.removeAll(other);
 			}
+			
 		} finally {
 			scanner.close();
 		}

@@ -161,7 +161,7 @@ public class HBaseUtil {
 	public void closeTableHandler(){
 		try{
 			if (table != null) 
-				table.close();			
+				table.close();		
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -259,6 +259,8 @@ public class HBaseUtil {
 					String family,String column,String compareOp,int type,String threshold,
 					String[] result_families, String[] result_columns)throws Exception{
 				
+		System.out.println(family+":"+column+";"+compareOp+","+type+","+threshold);
+		
 		if (column == null || family == null)
 			throw new Exception("the family:qulifer operation is null");
 		if(compareOp == null)
@@ -275,6 +277,8 @@ public class HBaseUtil {
 				HashMap<String, String> oneRow = new HashMap<String, String>();
 				String key = Bytes.toString(result.getRow());
 				String source = Bytes.toString(result.getValue(Bytes.toBytes(family), Bytes.toBytes(column)));
+				//System.out.println(Bytes.toString(result.getRow())+ "; "+source);
+				
 				if(Common.doCompare(type,source,compareOp,threshold)){
 					if (null != result_columns) {
 						for (int i = 0; i < result_columns.length; i++) {
@@ -292,7 +296,9 @@ public class HBaseUtil {
 						}
 						key_values.put(key, oneRow);
 					}					
-				}				
+				}else {
+					//System.out.println("compare is wrong "+source + ", "+compareOp +", "+threshold);
+				}
 				// TODO store the result into files				
 			}
 		

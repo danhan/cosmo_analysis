@@ -155,8 +155,7 @@ public class InsertData4Cosmo {
 					System.out.println(totalRow+" rows has been uploaded for file"+fileName);
 					putList.clear();					
 				}
-			
-								
+											
 				in.close();
 				
 			} catch (Exception e) {
@@ -164,16 +163,18 @@ public class InsertData4Cosmo {
 			} finally {
 				try {
 					if (in != null)
-						in.close();
-						this.hbase.closeTableHandler();
+						in.close();						
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 
 		}
-
+		
+		this.hbase.closeTableHandler();
+		
 		System.out.println("execution time(ms): "+ (System.currentTimeMillis() - start)+";total_number:"+num_of_particle);
+		
 	}
 
 }

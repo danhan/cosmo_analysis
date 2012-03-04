@@ -67,7 +67,7 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 			long exe_time = e_time - s_time;
 			
 			for(String key: key_values.keySet()){
-				System.out.print(key+"\t");
+				//System.out.print(key+"\t");
 				HashMap<String,String> map = key_values.get(key);
 				for(String item: map.keySet()){
 					//System.out.print(item+"\t"+)
@@ -75,7 +75,7 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 			}
 			
 			// TODO store the time into database
-			System.out.print("exe_time" + "\t" + "num_of_row" + "\n");
+			System.out.println("exe_time" + "\t" + "num_of_row");
 			System.out.println(exe_time + "\t" + key_values.size());			
 						
 		} catch (Exception e) {
@@ -93,17 +93,19 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 
 	}
 
-	// Q4: Return gas particles destroyed between step S1 and S2
+	/*
+	 *  Q4: Return gas particles destroyed between step S1 and S2(non-Javadoc)
+	 *  it cannot add the column filter if you want to get values in all versions
+	 * @see cos.dataset.query.CosmoQueryAbstraction#getUnique(int, long, long)
+	 */
 	@Override
 	public void getUnique(int type, long s1, long s2) {
 		ResultScanner rScanner = null;
 
 		try {
 			FilterList fList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-			Filter rowFilter = hbaseUtil.getRowFilter("=", "(-" + type + "-)");
-			Filter columnFilter = hbaseUtil.getFirstColumnFilter();
-			fList.addFilter(rowFilter);
-			fList.addFilter(columnFilter);
+			Filter rowFilter = hbaseUtil.getRowFilter("=", "(" + type + "-)");			
+			fList.addFilter(rowFilter);			
 			List<Long> timestamps = new LinkedList<Long>();
 			timestamps.add(s1);
 			timestamps.add(s2);
@@ -119,14 +121,19 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 			for (Result result : rScanner) {
 				count++;
 				String key = Bytes.toString(result.getRow());
+				
 				boolean s1Unique = false;
 				NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> resultMap = result
 						.getMap();
+				
 				if (resultMap != null) {
 					for (byte[] family : resultMap.keySet()) {						
 						NavigableMap<byte[], NavigableMap<Long, byte[]>> columns = resultMap.get(family);
+						//System.out.println("key set : "+columns.keySet().toString());
+						//System.out.println("values : "+columns.values().toString());
 						for (byte[] column : columns.keySet()) {
 							NavigableMap<Long, byte[]> values = columns.get(column);
+							//System.out.println("navigable map: keyset "+values.keySet().toString());							
 							if (values.keySet().contains(s1) && !values.keySet().contains(s2)) {
 								s1Unique = true;
 								break;
@@ -148,7 +155,7 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 			long e_time = System.currentTimeMillis();
 			long exe_time = e_time - s_time;
 			// TODO store the time into database
-			System.out.print("exe_time" + "\t" + "result_row"+"\t"+"total_num_of_row" + "\n");
+			System.out.println("exe_time" + "\t" + "result_row"+"\t"+"total_num_of_row");
 			System.out.println(exe_time + "\t" + particles.size()+"\t"+count);
 		} catch (Exception e) {
 			e.printStackTrace();
