@@ -33,4 +33,11 @@ public class Common {
 		}		
 		return false;	
 	}
+
+	public static String reverseIndex(String pId){
+		pId = CosmoConstant.IndexFormatter.format(Long.valueOf(pId));		
+		StringBuffer sb = new StringBuffer(pId);		
+		return sb.reverse().toString();
+	}
+	
 }

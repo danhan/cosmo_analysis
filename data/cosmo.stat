@@ -1,0 +1,15 @@
+24,1,1000,16777216,16778216
+24,0,1000,0,999
+24,2,1291,33554432,33555720
+24,1,1000,16777216,16778216100010[id,mass,px,py,pz,vx,vy,vz,phi,eps]
+24,0,1000,0,99999913[id,mass,px,py,pz,vx,vy,vz,phi,rho,temp,hsmooth,metals]
+24,2,1291,33554432,33555720128812[id,mass,px,py,pz,vx,vy,vz,phi,metals,tform,eps]
+24,1,1000,1000,16777216,16778216,10,[id,mass,px,py,pz,vx,vy,vz,phi,eps]
+24,0,1000,999,0,999,13,[id,mass,px,py,pz,vx,vy,vz,phi,rho,temp,hsmooth,metals]
+24,2,1291,1288,33554432,33555720,12,[id,mass,px,py,pz,vx,vy,vz,phi,metals,tform,eps]
+24,1,1000,1001,16777216,16778216,10,[id,mass,px,py,pz,vx,vy,vz,phi,eps]
+24,0,1000,1000,0,999,13,[id,mass,px,py,pz,vx,vy,vz,phi,rho,temp,hsmooth,metals]
+24,2,1291,1289,33554432,33555720,12,[id,mass,px,py,pz,vx,vy,vz,phi,metals,tform,eps]
+24,1,1000,1000,16777216,16778215,10,[id,mass,px,py,pz,vx,vy,vz,phi,eps]
+24,0,1000,1000,0,999,13,[id,mass,px,py,pz,vx,vy,vz,phi,rho,temp,hsmooth,metals]
+24,2,1291,1291,33554432,33555722,12,[id,mass,px,py,pz,vx,vy,vz,phi,metals,tform,eps]

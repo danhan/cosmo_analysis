@@ -18,7 +18,8 @@ public class QueryClient4Schema1 extends QueryClientBase{
 		int coprocs = Integer.parseInt(args[0]);
 		int query = Integer.parseInt(args[1]);
 		String property = args[2];
-		schema1.execute(coprocs, query, property);		
+		schema1.execute(coprocs, query, property);	
+		
 	}
 	
 }

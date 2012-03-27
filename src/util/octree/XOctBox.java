@@ -59,6 +59,8 @@ public class XOctBox {
         double ewdistance;
         double fbdistance;
 
+        //System.out.println("border distance: "+this.left+";"+this.right + "||| "+this.bottom+";"+this.top+ "||| "+this.front+";"+this.back);       
+                
         if (this.left <= x && x <= this.right)
             ewdistance = 0;
         else
@@ -73,15 +75,13 @@ public class XOctBox {
             nsdistance = 0;
         else
             nsdistance = Math.min(Math.abs(z - this.back), Math.abs(z - this.front));
-
+                
         return Math.sqrt(nsdistance * nsdistance +
                          ewdistance * ewdistance +
                          fbdistance * fbdistance);
     }    
     
-    
-    
-    
+     
 	public float getTop() {
 		return top;
 	}

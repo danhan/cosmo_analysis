@@ -150,15 +150,17 @@ public class XOctNode {
 	}
 
 
-	public List<XOctNode> getAllLeafNode(List<XOctNode> nodes) {
+	public ArrayList<XOctNode> getAllLeafNode(ArrayList<XOctNode> nodes) {
+		System.out.println("this index:********** "+this.index);
 		// If this Quad has objects, add them
-		if (this.points != null) {
+		if (this.points != null && this.points.size()>0) {			
 			nodes.add(this);
 		}
 
 		// If we have children, get their objects too
 		if (this.branches != null) {
 			for (int i = 0; i < this.branches.length; i++) {
+				System.out.println("branch index:==== "+this.branches[i].index);
 				this.branches[i].getAllLeafNode(nodes);
 			}
 		}
@@ -238,7 +240,39 @@ public class XOctNode {
 		return msg;
 	}
 	
-/*************TODO need to verify************************************************/	
+	
+	public String getDistanceArea(float x, float y, float z,double radius) {
+		String boxId = null;
+		double distance;
+		if (branches == null) {
+			for (X3DPoint point : this.points) {
+				distance = Math.sqrt(Math.pow(x - point.getX(), 2.0)
+						+ Math.pow(y - point.getY(), 2.0)
+						+ Math.pow(z - point.getZ(), 2.0));
+
+				if (distance <= radius) {
+					return this.index;					
+				}
+			}
+			return null;			
+		} else {
+			// Check the distance of the bounds of the branch, versus the
+			// bestDistance. If there is a boundary that
+			// is closer, then it is possible that another node has an object
+			// that is closer.
+			for (int i = 0; i < branches.length; i++) {
+				double childDistance = branches[i].boundary.borderDistance(x,y, z);
+				if (childDistance <= radius) {
+					String temp = branches[i].getDistanceArea(x, y, z, radius);
+					if (temp != null)
+						boxId = temp;
+				}
+			}
+		}
+		return boxId;
+	}	
+	
+	
 	
 	// return all points near it, but return only one point from other
 	public ArrayList getNearPoints(float x, float y, float z, double radius,
@@ -253,7 +287,7 @@ public class XOctNode {
 						+ Math.pow(z - point.getZ(), 2.0));
 
 				if (distance <= radius)
-					nearPoints.add(point);
+					nearPoints.add(point.index);
 			}
 			return nearPoints;
 		} else {
@@ -269,7 +303,7 @@ public class XOctNode {
 					//System.out.println("the node is : " + branches[i].index);
 					ArrayList tmp = branches[i].getNearPoints(x, y, z, radius,
 							nearPoints);
-					System.out.println(tmp.toString());
+					//System.out.println(tmp.toString());
 					if (tmp != null)
 						nearPoints.addAll(tmp);
 				}
@@ -278,7 +312,9 @@ public class XOctNode {
 		}
 		return nearPoints;
 	}
-
+	
+/*************TODO need to verify************************************************/
+	
 	public X3DPoint getNearestPoint(float x, float y, float z,
 			double ShortestDistance) {
 		X3DPoint closest = null;

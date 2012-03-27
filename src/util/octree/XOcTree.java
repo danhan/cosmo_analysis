@@ -34,9 +34,11 @@ public class XOcTree {
     	return root.getAllObjects(points);
     }
     
-    public List<XOctNode> getAllLeafNode(List<XOctNode> nodes){
+    public ArrayList<XOctNode> getAllLeafNode(ArrayList<XOctNode> nodes){
     	return root.getAllLeafNode(nodes);
     }
+    
+    
     public void setScale(long scale){
     	this.scale = scale;
     }
@@ -54,6 +56,16 @@ public class XOcTree {
     	ArrayList nodes = new ArrayList();
     	nodes = root.getNearPoints(x, y, z, radius,nodes);
         return nodes;
+    } 
+    
+    public String getDistanceArea(float x, float y, float z, double radius)
+    {
+    	x = x * scale;
+    	y = y * scale;
+    	z = z * scale;
+    	
+    	return root.getDistanceArea(x, y, z, radius);
+        
     } 
     
     public X3DPoint lookup(float x,float y,float z){
@@ -94,7 +106,7 @@ public class XOcTree {
     	}
 //    	
     	System.out.println("\nget all nodes............");
-    	List<XOctNode> nodes = new LinkedList<XOctNode>();
+    	ArrayList<XOctNode> nodes = new ArrayList<XOctNode>();
     	nodes = tree.getAllLeafNode(nodes);
     	System.out.println("size is : "+nodes.size());
     	int point_num = 0;

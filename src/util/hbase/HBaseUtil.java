@@ -18,16 +18,19 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.BinaryComparator;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
+import org.apache.hadoop.hbase.filter.InclusiveStopFilter;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
 import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
+import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.filter.TimestampsFilter;
 import org.apache.hadoop.hbase.io.hfile.Compression;
 import org.apache.hadoop.hbase.regionserver.StoreFile.BloomType;
@@ -44,8 +47,8 @@ public class HBaseUtil {
 	private Configuration conf = null;
 	private HBaseAdmin admin = null;
 	private HTable table = null;
-	private int cacheSize = -1;
-	private boolean blockCached = false;
+	private int cacheSize = 5000;
+	private boolean blockCached = true;
 	
 	public HBaseUtil(Configuration conf){			
 		try{
@@ -58,7 +61,9 @@ public class HBaseUtil {
 			this.conf.set("hbase.client.pause", "20");
 			this.conf.set("hbase.client.retries.number", "11");
 			this.conf.set("hbase.ipc.client.tcpnodelay","true");
-			this.conf.set("ipc.ping.interval", "3000");
+			this.conf.set("ipc.ping.interval", "60000"); // 1min
+			this.conf.set("ipc.socket.timeout", "300000"); // 
+			
 			
 			this.admin = new HBaseAdmin(this.conf);
 		}catch(Exception e){
@@ -87,7 +92,9 @@ public class HBaseUtil {
 			}			
 			HTableDescriptor td = this.createTableDescription(tableName, metrics,max_version);
 			System.out.println(tableName + ": <=>table descirption : "+td.toString());
-			this.admin.createTable(td);			
+			this.admin.createTable(td);	
+			//this.admin.createTable(td, ("0-").getBytes(), ("2-"+Long.MAX_VALUE).getBytes(),80);
+			
 		}catch(Exception e){
 			e.printStackTrace();
 			//log.info(e.fillInStackTrace());			
@@ -128,7 +135,7 @@ public class HBaseUtil {
 	
 	public Put constructRow(String rowKey,String[] families, String[] qualifiers, long ts,String[] values) throws Exception{
 		if(table == null)
-			throw new Exception("No table handler");
+			throw new Exception("!!!!!!!!!!! No table handler");
 		
 		Put put = new Put(rowKey.getBytes());
 		put.setWriteToWAL(false);
@@ -213,11 +220,14 @@ public class HBaseUtil {
 				}
 				HColumnDescriptor hcd = new HColumnDescriptor(colName);
 				hcd.setMaxVersions(max_version);
-				hcd.setBloomFilterType(BloomType.ROWCOL);
+				//hcd.setBloomFilterType(BloomType.ROWCOL);
+				
 				// compress it and require to install LZO
 				//hcd.setCompressionType(Compression.Algorithm.GZ);
 				td.addFamily(hcd);
-			}						
+			}
+			//td.setMaxFileSize(1073741824);
+			
 		}catch(Exception e){
 			//log.error(e.fillInStackTrace());
 			e.printStackTrace();
@@ -227,12 +237,10 @@ public class HBaseUtil {
 		return td;				
 	}
 
-	public Filter getRowFilter(String compareOp, String regex) throws Exception{
+	private CompareOp matchCompareOperation(String compareOp) throws Exception{
 		CompareOp operator = null;
 		if (compareOp == null)
 			throw new Exception("the compare operation is invalid");
-		if(regex == null)
-			throw new Exception("The regex is invalid");
 		
 		try{
 			if(compareOp.equals("=")){
@@ -251,15 +259,34 @@ public class HBaseUtil {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		
-		return new RowFilter(operator,new RegexStringComparator(regex));
+		return operator;
 	}
 	
+	public Filter getSubStringFilter(String compareOp, String regex) throws Exception{
+		CompareOp operator = matchCompareOperation(compareOp);		
+		return new RowFilter(operator,new SubstringComparator(regex));
+	}
+	
+	public Filter getBinaryFilter(String compareOp, String rowkey) throws Exception{
+		CompareOp operator = matchCompareOperation(compareOp);		
+		return new RowFilter(operator,new BinaryComparator(rowkey.getBytes()));
+	}
+	
+	
+	public Filter getPrefixFilter(String prefix) throws Exception{		
+		return new PrefixFilter(prefix.getBytes());
+	}
+	
+	public Filter getRegrexRowFilter(String compareOp, String regex) throws Exception{
+		CompareOp operator = matchCompareOperation(compareOp);			
+		return new RowFilter(operator,new RegexStringComparator(regex));
+	}	
+
 	public HashMap<String, HashMap<String, String>> columnFilter(ResultScanner rScanner,
 					String family,String column,String compareOp,int type,String threshold,
 					String[] result_families, String[] result_columns)throws Exception{
 				
-		System.out.println(family+":"+column+";"+compareOp+","+type+","+threshold);
+		System.out.println("column filter: "+family+":"+column+";"+compareOp+","+type+","+threshold);
 		
 		if (column == null || family == null)
 			throw new Exception("the family:qulifer operation is null");
@@ -276,6 +303,7 @@ public class HBaseUtil {
 				count++;
 				HashMap<String, String> oneRow = new HashMap<String, String>();
 				String key = Bytes.toString(result.getRow());
+				//System.out.println("DEBUG********result: "+result.toString());
 				String source = Bytes.toString(result.getValue(Bytes.toBytes(family), Bytes.toBytes(column)));
 				//System.out.println(Bytes.toString(result.getRow())+ "; "+source);
 				
@@ -296,8 +324,6 @@ public class HBaseUtil {
 						}
 						key_values.put(key, oneRow);
 					}					
-				}else {
-					//System.out.println("compare is wrong "+source + ", "+compareOp +", "+threshold);
 				}
 				// TODO store the result into files				
 			}
@@ -318,23 +344,26 @@ public class HBaseUtil {
 		return new TimestampsFilter(timestamps);	
 				
 	}	
+	/*
+	 * access the first column
+	 */
 	public Filter getFirstColumnFilter() throws Exception{
 		return new FirstKeyOnlyFilter();
 	}
 	
-	public Filter getPrefixFilter(byte[] prefix) throws Exception{
-		if(prefix == null || prefix.length == 0)
-			throw new Exception("the prefix is null");
-		
-		return new PrefixFilter(prefix);
+	public Filter getInclusiveFilter(String stopRow) throws Exception{
+		return new InclusiveStopFilter(Bytes.toBytes(stopRow));
 	}
 	
+	/*
+	 * only access keys
+	 */
 	public Filter getKeyOnlyFilter() throws Exception {
 		return new KeyOnlyFilter();
 	}
 	
 	
-	public ResultScanner getResultSet(FilterList filterList,String[] family,String[] columns) throws Exception{
+	public ResultScanner getResultSet(String[] rowRange,FilterList filterList,String[] family,String[] columns,int maxVersion) throws Exception{
 		if(table == null)
 			throw new Exception("No table handler");
 		if(cacheSize < 0)
@@ -345,19 +374,27 @@ public class HBaseUtil {
 		
 		try{
 			scan = new Scan();
-			scan.setMaxVersions(CosmoConstant.MAX_VERION);
+			
 			scan.setCaching(this.cacheSize);
 			scan.setCacheBlocks(blockCached);
 			scan.setFilter(filterList);	
-				
+			if(maxVersion>0)
+				scan.setMaxVersions(maxVersion);
+			
+			if(rowRange != null){
+				scan.setStartRow(rowRange[0].getBytes());
+				if(rowRange.length == 2 && rowRange[1] != null)
+					scan.setStopRow(rowRange[1].getBytes());			
+			}	
+			
 			if(columns != null){
 				for(int i=0;i<columns.length;i++){
 					scan.addColumn(family[i].getBytes(),columns[i].getBytes());	
 				}	
 			}			
-			//TODO set filter for scan
+
 			rscanner = this.table.getScanner(scan);
-			System.out.println("after get the result scanner...");
+			System.out.println("finsh to get the result scanner...");
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -367,7 +404,7 @@ public class HBaseUtil {
 		
 	}
 	
-	public Scan generateScan(FilterList filterList,String[] families,String[] columns) throws Exception{
+	public Scan generateScan(String[] rowRange,FilterList filterList,String[] family,String[] columns,int maxVersion) throws Exception{
 		if(table == null)
 			throw new Exception("No table handler");
 		if(cacheSize < 0)
@@ -377,47 +414,24 @@ public class HBaseUtil {
 		
 		try{
 			scan = new Scan();
-			scan.setMaxVersions(CosmoConstant.MAX_VERION);
-			//scan.setCaching(this.cacheSize);
-			//scan.setCacheBlocks(blockCached);
-			scan.setFilter(filterList);	
-				
-			if(columns != null){
-				for(int i=0;i<columns.length;i++){
-					scan.addColumn(families[i].getBytes(),columns[i].getBytes());	
-				}	
-			}			
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		return scan;		
-	}	
-	
-	public Scan generateScan(byte[][] rowRange,FilterList filterList,String[] family,String[] columns) throws Exception{
-		if(table == null)
-			throw new Exception("No table handler");
-		if(cacheSize < 0)
-			throw new Exception("should set cache size before scanning");
-		
-		Scan scan = null;		
-		
-		try{
-			scan = new Scan();
-			scan.setMaxVersions(CosmoConstant.MAX_VERION);
-			//scan.setCaching(this.cacheSize);
-			//scan.setCacheBlocks(blockCached);
-			scan.setFilter(filterList);	
-			scan.setStartRow(rowRange[0]);
-			scan.setStopRow(rowRange[1]);
+			scan.setCaching(this.cacheSize);
+			scan.setCacheBlocks(this.blockCached);
+			scan.setFilter(filterList);
+			if(maxVersion>0)
+				scan.setMaxVersions(maxVersion);
+			if(rowRange != null){
+				scan.setStartRow(rowRange[0].getBytes());
+				if(rowRange.length == 2)
+					scan.setStopRow(rowRange[1].getBytes());			
+			}
 				
 			if(columns != null){
 				for(int i=0;i<columns.length;i++){
 					scan.addColumn(family[i].getBytes(),columns[i].getBytes());	
+					System.out.println(family[i]+";"+columns[i]);
 				}	
-			}			
-			System.out.println("after get the result scanner...");
+			}				
+			System.out.println("finish to get the result scanner...");
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -427,82 +441,103 @@ public class HBaseUtil {
 		
 	}	
 
-	public ResultScanner getResultSet(byte[][] rowRange,FilterList filterList,String[] family,String[] columns) throws Exception{
-		if(table == null)
-			throw new Exception("No table handler");
-		if(cacheSize < 0)
-			throw new Exception("should set cache size before scanning");
-		
-		Scan scan = null;
-		ResultScanner rscanner = null;
-		
-		try{
-			scan = new Scan();
-			scan.setMaxVersions(CosmoConstant.MAX_VERION);
-			scan.setCaching(this.cacheSize);
-			scan.setCacheBlocks(blockCached);
-			scan.setFilter(filterList);	
-			scan.setStartRow(rowRange[0]);
-			scan.setStopRow(rowRange[1]);
-				
-			if(columns != null){
-				for(int i=0;i<columns.length;i++){
-					scan.addColumn(family[i].getBytes(),columns[i].getBytes());	
-				}	
-			}			
-			
-			//TODO set filter for scan
-			rscanner = this.table.getScanner(scan);
-			System.out.println("after get the result scanner...");
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		return rscanner;
-		
-	}	
 	
 	
-	public void getResult(String tableName) {
-		System.out.println("get Result from table name : " + tableName);
-		Scan s = new Scan();
-		ResultScanner ss = null;		
-		s.setMaxVersions(3);
-		try {			
-			HTable table = new HTable(conf, tableName);
-					
-			ss = table.getScanner(s);			
-
-			System.out.println("Bixidata table description is : "
-					+ table.getTableDescriptor().toString());
-			int count = 100;
-			for (Result r : ss) {
-				//List<KeyValue> kv = r.getColumn(Bytes.toBytes("cf"), Bytes.toBytes("attr"));  // returns all versions of this column
-				
-				for(KeyValue kv: r.getColumn("qq".getBytes(),"pos_x".getBytes())){
-					System.out.println(new String(kv.getFamily()) + "= "+ new String(kv.getValue())+";"+kv.getTimestamp()+";");
-				}
-					
-				//System.out.print("the row is : " + new String(r.getRow())+": {");
-				
-//				for (KeyValue kv : r.raw()) {					
-//					System.out.print(new String(kv.getFamily()) + "= "+ new String(kv.getValue())+";"+kv.getTimestamp()+";");
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+//	public ResultScanner getResultSet(byte[][] rowRange,FilterList filterList,String[] family,String[] columns,int maxVersion) throws Exception{
+//		if(table == null)
+//			throw new Exception("No table handler");
+//		if(cacheSize < 0)
+//			throw new Exception("should set cache size before scanning");
+//		
+//		Scan scan = null;
+//		ResultScanner rscanner = null;
+//		
+//		try{
+//			scan = new Scan();
+//			scan.setCaching(this.cacheSize);
+//			scan.setCacheBlocks(blockCached);
+//			scan.setFilter(filterList);
+//			if(maxVersion>0)
+//				scan.setMaxVersions(maxVersion);
+//			if(rowRange != null){
+//				scan.setStartRow(rowRange[0]);
+//				scan.setStopRow(rowRange[1]);				
+//			}
+//
+//				
+//			if(columns != null){
+//				for(int i=0;i<columns.length;i++){
+//					scan.addColumn(family[i].getBytes(),columns[i].getBytes());	
+//				}	
+//			}			
+//			
+//			//TODO set filter for scan
+//			rscanner = this.table.getScanner(scan);
+//			System.out.println("after get the result scanner...");
+//			
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//		
+//		return rscanner;
+//		
+//	}	
+	
+	
+//	public void getResult(String tableName) {
+//		System.out.println("get Result from table name : " + tableName);
+//		Scan s = new Scan();
+//		ResultScanner ss = null;		
+//		s.setMaxVersions(3);
+//		try {			
+//			HTable table = new HTable(conf, tableName);
 //					
+//			ss = table.getScanner(s);			
+//
+//			System.out.println("Bixidata table description is : "
+//					+ table.getTableDescriptor().toString());
+//			int count = 100;
+//			for (Result r : ss) {
+//				//List<KeyValue> kv = r.getColumn(Bytes.toBytes("cf"), Bytes.toBytes("attr"));  // returns all versions of this column
+//				
+//				for(KeyValue kv: r.getColumn("qq".getBytes(),"pos_x".getBytes())){
+//					System.out.println(new String(kv.getFamily()) + "= "+ new String(kv.getValue())+";"+kv.getTimestamp()+";");
 //				}
-				//System.out.println("}");
-				count --;
-				if(count<0)
-					break;
-			}			
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			ss.close();
-		}
-
-	}
+//					
+//				//System.out.print("the row is : " + new String(r.getRow())+": {");
+//				
+////				for (KeyValue kv : r.raw()) {					
+////					System.out.print(new String(kv.getFamily()) + "= "+ new String(kv.getValue())+";"+kv.getTimestamp()+";");
+////					
+////				}
+//				//System.out.println("}");
+//				count --;
+//				if(count<0)
+//					break;
+//			}			
+//
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		} finally {
+//			ss.close();
+//		}
+//
+//	}
 
 	public HBaseAdmin getAdmin() {
 		return admin;

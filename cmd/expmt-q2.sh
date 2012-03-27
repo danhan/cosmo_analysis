@@ -12,7 +12,7 @@ export conditions
 
 qid=2
 
-for j in {1..2}; do
+for j in {1..1}; do
 echo "********$j Times*********************************\n"
 
 for i in $conditions; do
