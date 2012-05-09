@@ -126,9 +126,9 @@ public class CosmoConstant {
 	
 	/***********For Raster Indexing******************/
 	
-	public static final int X_PRECISION = 1000;
-	public static final int Z_PRECISION = 1000;
-	public static final int LOCATION_OFFSET = 1;
+	public static final int SPACE_SCALE = 10000000;
+	public static final int Z_SCALE = 10000000;
+	public static final int LOCATION_OFFSET = 1; // space offset to adjust to 0,0,0
 	public final static String TABLE_NAME_5 = "cosmo50.5";
 	
 	

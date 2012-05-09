@@ -23,7 +23,7 @@ import cos.dataset.query.coprocessor.CosmoProtocol;
  * In this row key, it cannot include the space-indexing, because the location for each particle is changing, 
  * so space-indexing is changed over snapshot. The space-indexing is not useful here. 
  */
-public class CosmoQuerySchema2 extends CosmoQueryAbstraction{
+public class CosmoQuerySchema2 extends CosmoQueryTime{
 
 	
 	public CosmoQuerySchema2() {
@@ -70,11 +70,6 @@ public class CosmoQuerySchema2 extends CosmoQueryAbstraction{
 		
 	}
 
-	@Override
-	public void findNeigbour(X3DPoint p,double distance,long snapshot) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public void getUnique(int type, long s1, long s2) {

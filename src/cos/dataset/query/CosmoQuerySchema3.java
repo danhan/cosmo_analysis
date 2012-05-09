@@ -25,7 +25,7 @@ import cos.dataset.query.coprocessor.CosmoProtocol;
 
 
 // index : the reversed index id - type
-public class CosmoQuerySchema3 extends CosmoQueryAbstraction{
+public class CosmoQuerySchema3 extends CosmoQueryTime{
 	
 	public CosmoQuerySchema3() {
 		tableName = CosmoConstant.TABLE_NAME_3;
@@ -461,16 +461,6 @@ public class CosmoQuerySchema3 extends CosmoQueryAbstraction{
 		return rowRanges;
 	}
 	
-	/*
-	 * 1 Get the neighbours in client side 
-	 * 2 send the neighbours particles id and get all information about neighbours
-	 * @see cos.dataset.query.CosmoQueryAbstraction#findNeigbour(util.octree.X3DPoint, int, double, long)
-	 */
-	@Override
-	public void findNeigbour(X3DPoint p, double distance,long snapshot) {
-
-
-	}
 	
 /*
  * For test	***************************************

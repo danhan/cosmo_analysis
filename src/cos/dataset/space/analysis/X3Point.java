@@ -8,6 +8,16 @@ public class X3Point<T> {
 	String index = "-1";
 	long value = -1;
 	
+	public X3Point(){
+		
+	}
+	
+	public X3Point(T x,T y,T z){
+		this.x = x;
+		this.y = y;
+		this.z = z;		
+	}
+	
 	public X3Point(T x,T y,T z,long value){
 		this.x = x;
 		this.y = y;
@@ -51,7 +61,12 @@ public class X3Point<T> {
 		this.index = index;
 	}
 	
-	public boolean isEqual(X3Point point){
+	
+	public void setValue(long value) {
+		this.value = value;
+	}
+
+	public boolean isEqual(X3Point<T> point){
 		if(this.x == point.x &&
 		   this.y == point.y &&
 		   this.z == point.z)
@@ -60,7 +75,7 @@ public class X3Point<T> {
 	}
 	
 	public String toString(){
-		String msg = "x=>"+this.x+";"+
+		String msg = "x=>"+this.x+
 					";y=>"+this.y+
 					";z=>"+this.z+
 					";index=>"+this.index+

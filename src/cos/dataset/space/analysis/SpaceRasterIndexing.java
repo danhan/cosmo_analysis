@@ -6,24 +6,24 @@ import util.octree.X3DPoint;
 
 /*
  * store the point into a vector in hbase, 
- * rowkey is the index of row, range [0,x_precise-1] which should be formated.
+ * rowkey is the index of row, range [0,x_partition-1] which should be formated.
  * column is the index of column, column is the true value of y location
  * version is the 3rd dimension index, range [0,z_preciese-1] which should be formated as Long
  */
 public class SpaceRasterIndexing {
 
 	XCube<Long> space_box = null;
-	int x_precise = 10000;	
-	int z_precise = 1000;
-	long z_stride = 1000;	
+	//int x_partition = 1;	
+	//int z_partition = 1;	
 	int offset = 1;
 	
 	DecimalFormat xIndexFormatter = new DecimalFormat("000000000"); 
-	long scale = 10000000;
+	long scale = 1;
 	
 	public SpaceRasterIndexing(float xMin,float xMax,float yMin,float yMax,float zMin,float zMax,
-						int offset,int x_precise,int z_precise){
+						int offset,int x_partition,int z_partition,int scale){
 		this.offset = offset;
+		this.scale = scale;
 		long x_min = ((long)xMin+offset) * scale;
 		long x_max = ((long)xMax+offset) * scale;
 		long y_min = ((long)yMin+offset) * scale;
@@ -31,12 +31,14 @@ public class SpaceRasterIndexing {
 		long z_min = ((long)zMin+offset) * scale;
 		long z_max = ((long)zMax+offset) * scale;
 		space_box = new XCube<Long>(x_min,x_max,y_min,y_max,z_min,z_max);
-		this.setX_precise(x_precise);		
-		this.setZ_precise(z_precise);
-		this.setZ_stride();
+		//this.setx_partition(x_partition);		
+		//this.setz_partition(z_partition);			
 	}
 	
-	private X3Point<Long> Normalize(X3Point<Float> point){
+	/*
+	 * Normalize the point to the scaled point
+	 */
+	private X3Point<Long> Normalize(X3Point<Double> point){
 		
 		long x = (long)((point.getX()+this.offset) * this.scale);
 		long y = (long)((point.getY()+this.offset) * this.scale);
@@ -47,9 +49,16 @@ public class SpaceRasterIndexing {
 	}
 	
 	/*
+	 * Normalize the distance to the scaled distance 
+	 */
+	private long Normalize(double r){
+		return (long)(r * this.scale);
+	}
+	
+	/*
 	 * This will 
 	 */
-	public void createVectorMap(int x_precise,int y_precise,int z_precise){
+	public void createVectorMap(int x_partition,int y_precise,int z_partition){
 		
 	}
 	
@@ -58,23 +67,45 @@ public class SpaceRasterIndexing {
 	 * This will be called by insert data into database
 	 * rowkey, columnID, 3rdId
 	 */
-	public Object[] getCell4Point(X3Point<Float> point){
+	public X3Point<Long> getCell4Point(X3Point<Double> point){
 		
-		System.out.println(point.toString());
 		X3Point<Long> normized = this.Normalize(point);
-		System.out.println(normized.toString()+"\n");
 		
-		Object[] cell = new Object[4]; // rowkey, column, version
 		
-		cell[0] = xIndexFormatter.format(normized.getX() / ((this.scale*10)/this.x_precise)); // string
+		X3Point<Long> cell = new X3Point<Long>(); 		
 		
-		cell[1] = Long.valueOf(normized.getY()); // String
+		String row = xIndexFormatter.format(normized.getX() );
+		cell.setX(Long.parseLong(row)); // string
+				
+		cell.setY(normized.getY()); // for column
 		
-		cell[2] = normized.getZ() / this.z_stride; // long for version number
-		
-		cell[3] = Long.valueOf(normized.getValue()); // long for particle Index id
+		cell.setZ(normized.getZ());// long for version number
+			
+		cell.setValue(Long.valueOf(normized.getValue()));// long for particle Index id
+	
+		//System.out.println(normized.toString());
+		System.out.println(cell.toString()+"\n");
 		
 		return cell;
+	}
+	
+	/*
+	 * get the row, column, and version range for the given box
+	 */
+	public long[] getRange(XCube<Long> box){
+		long[] ranges = new long[6];
+		ranges[0] = box.getLeft() ;
+		ranges[1] = box.getRight();
+		ranges[2] = box.getBottom();
+		ranges[3] = box.getTop();
+		ranges[4] = box.getFront();
+		ranges[5] = box.getBack() ;
+		for(int i=0;i<ranges.length;i++){
+			System.out.print(ranges[i]+",");	
+		}
+		System.out.println();
+		
+		return ranges;
 	}
 	
 	/*
@@ -82,8 +113,18 @@ public class SpaceRasterIndexing {
 	 *  given point (x,y,z) and R
 	 *  return: exterior square: (x1,x2), (y1,y2),(z1,z2),
 	 */
-	public X3Point[] getExteriorArea(X3Point point,double r){
-		return null;
+	public XCube<Long> getExteriorArea(X3Point point,double r){
+		
+		X3Point<Long> normalized = this.Normalize(point);
+		long d = this.Normalize(r);
+		
+		
+		XCube<Long> cube = new XCube<Long>(normalized.getX()-d, normalized.getX()+d,
+								normalized.getY()-d,normalized.getY()+d,
+								normalized.getZ()-d,normalized.getZ()+d);
+		System.out.println(normalized.toString()+"; distance: "+d);
+		System.out.println("normalized cube is : "+cube.toString());
+		return cube;
 	}	
 	
 	
@@ -93,6 +134,7 @@ public class SpaceRasterIndexing {
 	 * return inscribed square: (x1,x2), (y1,y2),(z1,z2),
 	 */
 	public X3Point[] getInscribedArea(X3Point point,double r){
+		
 		return null;
 	}
 	
@@ -112,34 +154,23 @@ public class SpaceRasterIndexing {
 		this.space_box = space_box;
 	}
 
-	public int getX_precise() {
-		return x_precise;
-	}
-
-	public void setX_precise(int x_precise) {
-		if(x_precise>0)
-			this.x_precise = x_precise;
-	}
-
-
-	public long getZ_stride() {
-		return z_stride;
-	}
-
-	public void setZ_stride() {
-		if(this.scale > 0 && this.z_precise > 0){
-			this.z_stride = (this.scale*10)/ this.z_precise;	// because the scale is one less zero than the number of letter in the formatting string
-		}
-		
-	}
-
-	public int getZ_precise() {
-		return z_precise;
-	}
-
-	public void setZ_precise(int z_precise) {
-		if(z_precise > 0)
-			this.z_precise = z_precise;
-	}
+//	public int getx_partition() {
+//		return x_partition;
+//	}
+//
+//	public void setx_partition(int x_partition) {
+//		if(x_partition>0)
+//			this.x_partition = x_partition;
+//	}
+//
+//
+//	public int getz_partition() {
+//		return z_partition;
+//	}
+//
+//	public void setz_partition(int z_partition) {
+//		if(z_partition > 0)
+//			this.z_partition = z_partition;
+//	}
 	
 }

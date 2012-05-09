@@ -4,20 +4,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Properties;
 
-import util.octree.X3DPoint;
 
 import cos.dataset.parser.CosmoConstant;
-import cos.dataset.query.CosmoQueryAbstraction;
+import cos.dataset.query.CosmoQueryTime;
 
 public abstract class QueryClientBase {
 
-	CosmoQueryAbstraction queryEngine = null;
+	CosmoQueryTime queryEngine = null;
 	Properties configure;
 
-	abstract CosmoQueryAbstraction getQueryEngine();
+	abstract CosmoQueryTime getQueryEngine();
 
 	private static String where = null;
 	private static String left_join = null;

@@ -285,9 +285,9 @@ public class XOctNode {
 				distance = Math.sqrt(Math.pow(x - point.getX(), 2.0)
 						+ Math.pow(y - point.getY(), 2.0)
 						+ Math.pow(z - point.getZ(), 2.0));
-
+				System.out.println("distance is: "+distance);
 				if (distance <= radius)
-					nearPoints.add(point.index);
+					nearPoints.add(point);
 			}
 			return nearPoints;
 		} else {
@@ -300,10 +300,10 @@ public class XOctNode {
 						y, z);
 
 				if (childDistance < radius) {
-					//System.out.println("the node is : " + branches[i].index);
+					System.out.println("the node is : " + branches[i].index);
 					ArrayList tmp = branches[i].getNearPoints(x, y, z, radius,
 							nearPoints);
-					//System.out.println(tmp.toString());
+					System.out.println(tmp.size());
 					if (tmp != null)
 						nearPoints.addAll(tmp);
 				}

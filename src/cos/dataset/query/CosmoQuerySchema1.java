@@ -30,7 +30,7 @@ import cos.dataset.space.analysis.SpaceQuadTreeIndexing;
  * In this row key, it cannot include the space-indexing, because the location for each particle is changing, 
  * so space-indexing is changed over snapshot
  */
-public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
+public class CosmoQuerySchema1 extends CosmoQueryTime {
 
 	public CosmoQuerySchema1() {
 		tableName = CosmoConstant.TABLE_NAME;
@@ -90,34 +90,6 @@ public class CosmoQuerySchema1 extends CosmoQueryAbstraction {
 		}
 	}
 
-	/*
-	 * 1 Get the neighbours in client side 
-	 * 2 send the neighbours particles id and get all information about neighbours
-	 * @see cos.dataset.query.CosmoQueryAbstraction#findNeigbour(util.octree.X3DPoint, int, double, long)
-	 */
-	@Override
-	public void findNeigbour(X3DPoint p, double distance,long snapshot) {
-		// TODO 
-		BufferedReader br = null;
-		try{
-			// createMemoryTree(snapshot)
-			SpaceQuadTreeIndexing indexing = new SpaceQuadTreeIndexing(-1, 1, -1, 1,-1, 1,3);
-			String indexingFile = CosmoConstant.DATA_INPUT+"/"+snapshot+"-index";
-			indexing.buildSnapshotTree(CosmoConstant.DATA_TEST_INPUT,snapshot,indexingFile);
-			float x = p.getX();
-			float y = p.getY();
-			float z = p.getZ();			
-			X3DPoint lookup = indexing.getTree().lookup(x, y, z);
-			System.out.println("looking up: "+lookup);
-			String boxId = indexing.getTree().getDistanceArea(x,y,z,0.1);
-			System.out.println("the box id: "+boxId);
-			 
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-
-
-	}
 
 	/*
 	 *  Q4: Return gas particles destroyed between step S1 and S2(non-Javadoc)

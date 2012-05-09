@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Put;
 
 import cos.dataset.parser.CosmoConstant;
 
@@ -43,6 +44,16 @@ public class InsertSpacialData {
 		String fileDir = args[1];
 		long snapshot = Long.valueOf(args[2]);
 		inserter.uploadRasterMap(fileDir,snapshot);
+		X3Point<Double> point = new X3Point<Double>(0.5779609,0.5161069,0.14541020);
+		XCube cube = inserter.rasterIndexing.getExteriorArea(point, 0.4);
+		inserter.rasterIndexing.getRange(cube);		
+		// query based on the cube, count the particle returned
+		//TODO finished the query
+		
+		
+		
+		// query based on octree, count the particle returned
+		
 	}
 	/*
 	 * upload the location information for one snapshot
@@ -54,8 +65,11 @@ public class InsertSpacialData {
 			long s_time = System.currentTimeMillis();
 			
 			this.rasterIndexing = new SpaceRasterIndexing(-1,1,-1,1,-1,1,CosmoConstant.LOCATION_OFFSET,
-						CosmoConstant.X_PRECISION,CosmoConstant.Z_PRECISION);
+						1,1,CosmoConstant.SPACE_SCALE);
 			int count = 0;
+			ArrayList<Put> putList = new ArrayList<Put>();
+			int batchRow = 1000;
+			int totalRow = 0;
 			for (String fileName : fileNameList) {	
 				System.out.println("start to index file: "+fileName);
 				BufferedReader input = null;
@@ -63,29 +77,51 @@ public class InsertSpacialData {
 					input = new BufferedReader(new FileReader(fileName));
 					input.readLine();// skip the header
 					String line = input.readLine();
+					
 					while (line != null) {						
 						String[] items = line.split(CosmoConstant.METRICS_DELIMETER);
-						float x = Float
-								.parseFloat(items[CosmoConstant.INDEX_POS_X]);
-						float y = Float
-								.parseFloat(items[CosmoConstant.INDEX_POS_Y]);
-						float z = Float
-								.parseFloat(items[CosmoConstant.INDEX_POS_Z]);
+						double x = Double
+								.parseDouble(items[CosmoConstant.INDEX_POS_X]);
+						double y = Double
+								.parseDouble(items[CosmoConstant.INDEX_POS_Y]);
+						double z = Double
+								.parseDouble(items[CosmoConstant.INDEX_POS_Z]);
 						long pid = Long
 								.parseLong(items[CosmoConstant.INDEX_PID]);						
 						
-						X3Point<Float> point = new X3Point<Float>(x,y,z,pid);
-						Object[] cell = this.rasterIndexing.getCell4Point(point);
+						X3Point<Double> point = new X3Point<Double>(x,y,z,pid);
+						X3Point<Long> cell = this.rasterIndexing.getCell4Point(point);
 						
-						System.out.println("r:"+cell[0] + ";f:c:"+cell[1]+":t:"+cell[2]+"value:"+cell[3]);
+						//System.out.println("r:"+cell.getX() + ";f:c:"+cell.getY()+":t:"+cell.getZ()+"value:"+cell.getValue());
+						Put put = hbase.constructRow(String.valueOf(cell.getX()), 
+								new String[]{CosmoConstant.FAMILY_NAME}, 
+								new String[]{String.valueOf(cell.getY())}, 
+								cell.getZ(), 
+								new String[]{String.valueOf(cell.getValue())});
+						putList.add(put);
+						
+						if(putList.size() == 1000){							
+							hbase.flushBufferedRow(putList);
+							totalRow += batchRow;
+							myLog.debug(totalRow+" rows has been uploaded for file"+fileName);
+							putList.clear();
+						}						
 						
 						count++;
 						line = input.readLine();
 					}
+					
+					// for the last lines
+					if(putList.size()>0){
+						hbase.flushBufferedRow(putList);
+						totalRow += putList.size();					
+						putList.clear();					
+					}
 					if (line == null) {
 						System.out.println("finish indexing file: " + fileName);						
 						input.close();
-					}
+					}								
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
@@ -99,6 +135,8 @@ public class InsertSpacialData {
 			
 		}catch(Exception e){
 			e.printStackTrace();
+		}finally{
+			this.hbase.closeTableHandler();
 		}
 	}
 	

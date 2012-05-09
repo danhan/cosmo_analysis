@@ -40,7 +40,7 @@ public class CreateTableSchema {
 				System.out.println("finish creating the table: " + CosmoConstant.TABLE_NAME_4);				
 			}else if(args[0].equals("5")){
 				String families[] = {CosmoConstant.FAMILY_NAME.toString()};
-				hbaseUtil.createTable(CosmoConstant.TABLE_NAME_5, families,CosmoConstant.X_PRECISION);
+				hbaseUtil.createTable(CosmoConstant.TABLE_NAME_5, families,CosmoConstant.Z_SCALE);
 				System.out.println("finish creating the table: " + CosmoConstant.TABLE_NAME_5);					
 			}else{
 				String families[] = new String[]{"t"};

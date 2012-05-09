@@ -1,12 +1,13 @@
 package cos.dataset.experiment;
 
-import cos.dataset.query.CosmoQueryAbstraction;
+
 import cos.dataset.query.CosmoQuerySchema1;
+import cos.dataset.query.CosmoQueryTime;
 
 public class QueryClient4Schema1 extends QueryClientBase{
 
 	@Override
-	CosmoQueryAbstraction getQueryEngine() {
+	CosmoQueryTime getQueryEngine() {
 		return new CosmoQuerySchema1();
 	}
 	

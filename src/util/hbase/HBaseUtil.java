@@ -381,15 +381,18 @@ public class HBaseUtil {
 			if(maxVersion>0)
 				scan.setMaxVersions(maxVersion);
 			
+			scan.setTimeRange(10454102,12454102);
+			
+			
 			if(rowRange != null){
 				scan.setStartRow(rowRange[0].getBytes());
 				if(rowRange.length == 2 && rowRange[1] != null)
 					scan.setStopRow(rowRange[1].getBytes());			
-			}	
+			}						
 			
 			if(columns != null){
 				for(int i=0;i<columns.length;i++){
-					scan.addColumn(family[i].getBytes(),columns[i].getBytes());	
+					scan.addColumn(family[0].getBytes(),columns[i].getBytes());	
 				}	
 			}			
 

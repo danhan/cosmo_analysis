@@ -172,14 +172,13 @@ public class SpaceQuadTreeIndexing {
 			SpaceQuadTreeIndexing indexing = new SpaceQuadTreeIndexing(-1, 1, -1, 1,-1, 1,3);
 			indexing.buildSnapshotTree(inputDir,24,outFile);
 			
-//			List<X3DPoint> points = new LinkedList<X3DPoint>();
-//			indexing.getTree().getAllObjects(points);
-//			System.out.println("all points: "+points.size());
-			
-			float x = (float)-0.38065;
-			float y = (float)0.122575;
-			float z = (float)-0.00233783;			
-			ArrayList<X3DPoint> nearers = indexing.getTree().getNearPoints(x,y,z,0.0002);
+			List<X3DPoint> points = new LinkedList<X3DPoint>();
+			indexing.getTree().getAllObjects(points);
+			System.out.println("all points: "+points.size());			
+			float x = (float)0.5779609;
+			float y = (float)0.5161069;
+			float z = (float)0.14541020;			
+			ArrayList<X3DPoint> nearers = indexing.getTree().getNearPoints(x,y,z,0.25);
 			System.out.println("nearer point : "+ nearers.size());
 			//for(int i=0;i<points.size())
 			

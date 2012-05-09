@@ -122,8 +122,8 @@ public class XOcTree {
 //    	//System.out.println(point.size());
 //    	System.out.println(point.toString());
     	
-//    	ArrayList nodes = tree.getNearPoints(5, 5, 5, 1);
-//    	System.out.println("nearest points : "+nodes.size());
+    	ArrayList list = tree.getNearPoints(5, 5, 5, 1);
+    	System.out.println("nearest points : "+list.size());
 //    	
 //    	for(int i=0;i<nodes.size();i++){
 //    		System.out.println(nodes.get(i).toString());
