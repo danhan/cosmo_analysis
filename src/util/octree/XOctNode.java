@@ -6,7 +6,7 @@ import java.util.List;
 
 public class XOctNode {
 
-	private ArrayList<X3DPoint> points;
+	private ArrayList<XOctPoint> points;
 	private XOctNode[] branches;
 	private XOctBox boundary;
 	private int max_points_per_node = 3; // how many obejcts in a node;
@@ -17,7 +17,7 @@ public class XOctNode {
 			float zMax, int maximumItems, XOctNode parent) {
 		boundary = new XOctBox(xMin, xMax, yMin, yMax, zMin, zMax);
 		max_points_per_node = maximumItems;
-		points = new ArrayList<X3DPoint>();
+		points = new ArrayList<XOctPoint>();
 		this.parent = parent;
 		branches = null;
 	}
@@ -50,7 +50,7 @@ public class XOctNode {
 	// / <summary> Add a OctreeLeaf into the tree at a location.</summary>
 	// / <param name="leaf">object-location composite</param>
 	// / <returns> true if the pution worked.</returns>
-	public boolean insert(X3DPoint point) {
+	public boolean insert(XOctPoint point) {
 		//System.out.println("in insert.....point:.." + point.toString());		
 		
 		if ((branches == null) && this.points.size() < this.max_points_per_node) {			
@@ -121,21 +121,21 @@ public class XOctNode {
 
 		this.setBranchIndex();
 
-		ArrayList<X3DPoint> temp = (ArrayList<X3DPoint>) points.clone();
+		ArrayList<XOctPoint> temp = (ArrayList<XOctPoint>) points.clone();
 		points.clear();
-		Iterator<X3DPoint> item = temp.iterator();
+		Iterator<XOctPoint> item = temp.iterator();
 		
 		while (item.hasNext()) {
-			X3DPoint current = item.next();
+			XOctPoint current = item.next();
 			//System.out.println("in split....... start insert....");
 			this.insert(current);
 		}
 
 	}
 
-	private void addPoint(X3DPoint point) {
+	private void addPoint(XOctPoint point) {
 		if (this.points == null)
-			this.points = new ArrayList<X3DPoint>();
+			this.points = new ArrayList<XOctPoint>();
 		point.setIndex(this.index);
 		boolean existed = false;
 		for(int i=0;i<this.points.size();i++){
@@ -206,7 +206,7 @@ public class XOctNode {
 		return count;
 	}
 
-	public List<X3DPoint> getAllObjects(List<X3DPoint> results) {
+	public List<XOctPoint> getAllObjects(List<XOctPoint> results) {
 		// If this Quad has objects, add them
 		if (this.points != null) {
 			results.addAll(this.points);
@@ -245,7 +245,7 @@ public class XOctNode {
 		String boxId = null;
 		double distance;
 		if (branches == null) {
-			for (X3DPoint point : this.points) {
+			for (XOctPoint point : this.points) {
 				distance = Math.sqrt(Math.pow(x - point.getX(), 2.0)
 						+ Math.pow(y - point.getY(), 2.0)
 						+ Math.pow(z - point.getZ(), 2.0));
@@ -275,12 +275,13 @@ public class XOctNode {
 	
 	
 	// return all points near it, but return only one point from other
-	public ArrayList getNearPoints(float x, float y, float z, double radius,
-			ArrayList nearPoints) {
-
+	public ArrayList getNearPoints(float x, float y, float z, double radius) {
+		
+		ArrayList nearPoints = new ArrayList();
 		double distance;
 		if (branches == null) {
-			for (X3DPoint point : this.points) {
+			System.out.println("********* point number: "+this.points.size());
+			for (XOctPoint point : this.points) {
 
 				distance = Math.sqrt(Math.pow(x - point.getX(), 2.0)
 						+ Math.pow(y - point.getY(), 2.0)
@@ -301,11 +302,10 @@ public class XOctNode {
 
 				if (childDistance < radius) {
 					System.out.println("the node is : " + branches[i].index);
-					ArrayList tmp = branches[i].getNearPoints(x, y, z, radius,
-							nearPoints);
-					System.out.println(tmp.size());
+					XOctPoint tmp = branches[i].getNearestPoint(x, y, z, radius);
+					
 					if (tmp != null)
-						nearPoints.addAll(tmp);
+						nearPoints.add(tmp);
 				}
 
 			}
@@ -313,14 +313,22 @@ public class XOctNode {
 		return nearPoints;
 	}
 	
+    /// <summary> Get an object closest to a x/y/z. If there are branches at
+    /// this node, then the branches are searched. The branches are
+    /// checked first, to see if they are closer than the best distance
+    /// already found. If a closer object is found, bestDistance will
+    /// be updated with a new Double object that has the new distance.</summary>
+
+	
+	
 /*************TODO need to verify************************************************/
 	
-	public X3DPoint getNearestPoint(float x, float y, float z,
+	public XOctPoint getNearestPoint(float x, float y, float z,
 			double ShortestDistance) {
-		X3DPoint closest = null;
+		XOctPoint closest = null;
 		double distance;
 		if (branches == null) {
-			for (X3DPoint point : this.points) {
+			for (XOctPoint point : this.points) {
 				distance = Math.sqrt(Math.pow(x - point.getX(), 2.0)
 						+ Math.pow(y - point.getY(), 2.0)
 						+ Math.pow(z - point.getZ(), 2.0));
@@ -340,7 +348,7 @@ public class XOctNode {
 				double childDistance = branches[i].boundary.borderDistance(x,
 						y, z);
 				if (childDistance <= ShortestDistance) {
-					X3DPoint temp = branches[i].getNearestPoint(x, y, z,
+					XOctPoint temp = branches[i].getNearestPoint(x, y, z,
 							ShortestDistance);
 					if (temp != null)
 						closest = temp;

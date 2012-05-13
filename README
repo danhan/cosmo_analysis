@@ -1,0 +1,9 @@
+5-13
+1 SpaceRasterIndexing Test with HBase , found 61 true positive
+2 do the statistics on Cosmology data, found 65 points near to the given point
+3 SpaceQuadTreeIndexing Test with the file, found 2 true positive
+
+Problem:
+1 Bug: SpaceOctreeIndexing has bugs, because it cannot find the correct number of near points
+2 Bug: SpaceRasterIndexing has bugs, because it missed 4 points
+3 Bug: SpaceRasterIndexing is slow when use the column and timestamp filter, but with timestamp range will get better performance.   

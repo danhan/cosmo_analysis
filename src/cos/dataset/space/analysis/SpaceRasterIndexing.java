@@ -2,7 +2,7 @@ package cos.dataset.space.analysis;
 
 import java.text.DecimalFormat;
 
-import util.octree.X3DPoint;
+import util.octree.XOctPoint;
 
 /*
  * store the point into a vector in hbase, 

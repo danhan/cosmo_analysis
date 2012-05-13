@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import util.hbase.HBaseUtil;
-import util.octree.X3DPoint;
+import util.octree.XOctPoint;
 
 public abstract class CosmoQueryAbstraction {
 	

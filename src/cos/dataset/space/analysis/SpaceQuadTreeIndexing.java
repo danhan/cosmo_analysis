@@ -11,7 +11,7 @@ import java.util.List;
 
 import cos.dataset.parser.CosmoConstant;
 
-import util.octree.X3DPoint;
+import util.octree.XOctPoint;
 import util.octree.XOcTree;
 import util.octree.XOctNode;
 
@@ -155,44 +155,6 @@ public class SpaceQuadTreeIndexing {
 					}
 				}
 			}			
-		}
-	}
-
-	public static void main(String[] args) {
-		
-		try {
-			if(args.length<1){
-				throw new Exception("Please input correct arguments");
-			}
-			String inputDir = args[0];//"./data/first/";
-			String outFile = null;
-			if (args.length==2)
-				outFile = args[1];//"./data/space-indexing";
-			
-			SpaceQuadTreeIndexing indexing = new SpaceQuadTreeIndexing(-1, 1, -1, 1,-1, 1,3);
-			indexing.buildSnapshotTree(inputDir,24,outFile);
-			
-			List<X3DPoint> points = new LinkedList<X3DPoint>();
-			indexing.getTree().getAllObjects(points);
-			System.out.println("all points: "+points.size());			
-			float x = (float)0.5779609;
-			float y = (float)0.5161069;
-			float z = (float)0.14541020;			
-			ArrayList<X3DPoint> nearers = indexing.getTree().getNearPoints(x,y,z,0.25);
-			System.out.println("nearer point : "+ nearers.size());
-			//for(int i=0;i<points.size())
-			
-//			// look up one point
-//			long s_time = System.currentTimeMillis();
-//			float x = (float)-0.38065;
-//			float y = (float)0.122575;
-//			float z = (float)-0.00233783;
-//			System.out.println(indexing.getTree().lookup(x,y,z));
-//			System.out.println("looking up exe_time=>"+(System.currentTimeMillis()-s_time));
-
-			
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 

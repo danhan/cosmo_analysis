@@ -19,7 +19,7 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import util.octree.X3DPoint;
+import util.octree.XOctPoint;
 
 import cos.dataset.parser.CosmoConstant;
 import cos.dataset.query.coprocessor.CosmoProtocol;

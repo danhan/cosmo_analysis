@@ -74,6 +74,7 @@ public class X3Point<T> {
 		return false;
 	}
 	
+	
 	public String toString(){
 		String msg = "x=>"+this.x+
 					";y=>"+this.y+
