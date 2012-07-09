@@ -3,6 +3,7 @@ package cos.dataset.query;
 import java.io.BufferedReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NavigableMap;
@@ -124,6 +125,7 @@ public class CosmoQuerySchema5 extends CosmoQuerySpace{
 				}
 			}			
 			
+			Collections.sort(tp);
 			System.out.println("false positive : "+fp + "; true positive: "+tp.size());
 			System.out.println("true positive : "+tp.toString());
 

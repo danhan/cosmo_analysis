@@ -5,5 +5,11 @@
 
 Problem:
 1 Bug: SpaceOctreeIndexing has bugs, because it cannot find the correct number of near points
-2 Bug: SpaceRasterIndexing has bugs, because it missed 4 points
 3 Bug: SpaceRasterIndexing is slow when use the column and timestamp filter, but with timestamp range will get better performance.   
+
+Hard code:
+1 SpaceRasterIndexing: the timestamp range is hard code there, this should be corrected
+
+Fixed:
+2 Bug: SpaceRasterIndexing has bugs, because it missed 4 points 
+  Exp: No bugs there because the printed information for the result is wrong. 

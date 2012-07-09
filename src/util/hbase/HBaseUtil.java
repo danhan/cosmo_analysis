@@ -381,7 +381,7 @@ public class HBaseUtil {
 			if(maxVersion>0)
 				scan.setMaxVersions(maxVersion);
 			
-			scan.setTimeRange(10454102,12454102);
+			scan.setTimeRange(7454102,15454102);
 			
 			
 			if(rowRange != null){

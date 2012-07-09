@@ -74,7 +74,7 @@ public class XCube<T> {
     				 ";bottom=>"+this.bottom+
     				 ";top=>"+this.top+
     				 ";front=>"+this.front+
-    				 ";bottom=>"+this.bottom;
+    				 ";back=>"+this.back;
     	return msg;    				 
     }
     
